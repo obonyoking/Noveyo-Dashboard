@@ -1,0 +1,191 @@
+{
+  "clients": [
+    {
+      "id": 1757211400507,
+      "name": "Rodgers onyango",
+      "email": "rodgers@gmail.com",
+      "service": "print",
+      "type": "",
+      "value": 500,
+      "deposit": "Paid",
+      "status": "Paused",
+      "paymentStatus": "deposit",
+      "paidAmount": 250,
+      "phone": "0102397564",
+      "contractDuration": null
+    },
+    {
+      "id": 1757212335920,
+      "name": "Henry Naminde",
+      "email": "henry@gmail.com",
+      "service": "print",
+      "type": "",
+      "value": 200,
+      "paymentStatus": "deposit",
+      "paidAmount": 100,
+      "status": "Paused",
+      "phone": "0796257641",
+      "contractDuration": null
+    },
+    {
+      "id": 1757212504714,
+      "name": "The Well Irish Pub & Restaurant",
+      "email": "info@thewell.co.ke",
+      "service": "social",
+      "type": "onetime",
+      "value": 1000,
+      "paymentStatus": "fully-paid",
+      "paidAmount": 1000,
+      "status": "Closed",
+      "phone": "0713142999",
+      "contractDuration": null
+    },
+    {
+      "id": 1757212660759,
+      "name": "The Well Irish Pub & Restaurant",
+      "email": "info@thewell.co.ke",
+      "service": "social",
+      "type": "contract",
+      "value": 2500,
+      "paymentStatus": "fully-paid",
+      "paidAmount": 2500,
+      "status": "Active",
+      "phone": "0713142999",
+      "contractDuration": "monthly",
+      "monthlyPayments": [
+        {
+          "id": 1757220240883,
+          "date": "2025-09-07",
+          "amount": 2500
+        }
+      ]
+    },
+    {
+      "id": 1757212789976,
+      "name": "Covenant mediators and counseling center",
+      "email": "obadiah@gmail.com",
+      "service": "print",
+      "type": "",
+      "value": 700,
+      "paymentStatus": "deposit",
+      "paidAmount": 350,
+      "status": "Paused",
+      "phone": "",
+      "contractDuration": null
+    }
+  ],
+  "prospects": [
+    {
+      "id": 1,
+      "name": "Michael Roberts",
+      "company": "GreenTech Solutions",
+      "email": "michael@greentech.com",
+      "phone": "(555) 123-4567",
+      "service": "Web Design",
+      "proposalSent": "2023-06-15",
+      "response": "Positive",
+      "status": "Follow-up Scheduled"
+    },
+    {
+      "id": 2,
+      "name": "Jennifer Lee",
+      "company": "Fashion Boutique",
+      "email": "jennifer@fboutique.com",
+      "phone": "(555) 234-5678",
+      "service": "Branding Package",
+      "proposalSent": "2023-06-20",
+      "response": "No Response",
+      "status": "Awaiting Response"
+    },
+    {
+      "id": 3,
+      "name": "David Wilson",
+      "company": "Wilson Legal",
+      "email": "david@wilsonlegal.com",
+      "phone": "(555) 345-6789",
+      "service": "Logo Design",
+      "proposalSent": "2023-06-10",
+      "response": "Negative",
+      "status": "Not Interested"
+    },
+    {
+      "id": 4,
+      "name": "Emily Chen",
+      "company": "StartUp Innovate",
+      "email": "emily@startupinnovate.com",
+      "phone": "(555) 456-7890",
+      "service": "Social Media Graphics",
+      "proposalSent": "2023-06-18",
+      "response": "Positive",
+      "status": "Meeting Scheduled"
+    }
+  ],
+  "projects": [
+    {
+      "id": 1757231227089,
+      "clientId": 1757212504714,
+      "clientName": "The Well Irish Pub & Restaurant",
+      "projectName": "EPL Fixtures Poster Design",
+      "service": "Social Media Graphics",
+      "status": "In Progress",
+      "startDate": "2025-09-01",
+      "dueDate": "2026-09-01",
+      "progress": 1,
+      "value": 30000,
+      "description": "Edit posters that show major weekend premier league football games. Complete 4 posters for EPL every month and 1 poster for F1. The posters should be delivered at the beginning of every month."
+    },
+    {
+      "id": 1757231518257,
+      "clientId": 1757212504714,
+      "clientName": "The Well Irish Pub & Restaurant",
+      "projectName": "Sample EPL posters",
+      "service": "Social Media Graphics",
+      "status": "Completed",
+      "startDate": "2025-08-28",
+      "dueDate": "2025-08-31",
+      "progress": 100,
+      "value": 2500,
+      "description": "Sample EPL Fixtures Posters For Major premier league teams."
+    },
+    {
+      "id": 1757231607969,
+      "clientId": 1757212335920,
+      "clientName": "Henry Naminde",
+      "projectName": "Press Card Design",
+      "service": "Print Design",
+      "status": "Completed",
+      "startDate": "2025-09-03",
+      "dueDate": "2025-09-04",
+      "progress": 100,
+      "value": 200,
+      "description": "Recreate a press card design for print"
+    },
+    {
+      "id": 1757231697544,
+      "clientId": 1757212789976,
+      "clientName": "Covenant mediators and counseling center",
+      "projectName": "Certificate Design",
+      "service": "Social Media Graphics",
+      "status": "Completed",
+      "startDate": "2025-07-29",
+      "dueDate": "2025-07-31",
+      "progress": 100,
+      "value": 500,
+      "description": "Create designs for certificates of mediation for an award ceremony"
+    },
+    {
+      "id": 1757231854592,
+      "clientId": 1757211400507,
+      "clientName": "Rodgers onyango",
+      "projectName": "Computer Packages Certificate Design",
+      "service": "Print Design",
+      "status": "Completed",
+      "startDate": "2025-07-15",
+      "dueDate": "2025-06-25",
+      "progress": 100,
+      "value": 500,
+      "description": "Design a certificate of completion for a computer packages session."
+    }
+  ],
+  "exportDate": "2025-09-07T08:04:17.647Z"
+}
