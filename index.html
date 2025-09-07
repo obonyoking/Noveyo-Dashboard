@@ -304,9 +304,242 @@
         
         .mt-20 { margin-top: 20px; }
         .mb-20 { margin-bottom: 20px; }
+        
+        /* Mobile Toggle Button */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .mobile-toggle:hover {
+            background: #5a52ff;
+        }
+
+        /* Mobile Overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .mobile-overlay.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .mobile-toggle {
+                display: block;
+            }
+            
+            .sidebar {
+                width: 280px;
+                position: fixed;
+                top: 0;
+                left: -280px;
+                z-index: 1000;
+                transition: left 0.3s ease;
+                height: 100vh;
+                overflow-y: auto;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 60px 15px 20px;
+                width: 100%;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+            
+            .page-title {
+                font-size: 20px;
+            }
+            
+            .d-flex {
+                flex-direction: column;
+                width: 100%;
+                gap: 10px;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-card h3 {
+                font-size: 18px;
+            }
+            
+            .chart-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .chart-card {
+                width: 100%;
+                padding: 15px;
+            }
+            
+            .card {
+                margin-bottom: 15px;
+            }
+            
+            .card-header {
+                padding: 15px;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+            
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            table {
+                min-width: 600px;
+            }
+            
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            .form-control {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .btn {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .tab {
+                padding: 8px 12px;
+                font-size: 14px;
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+            }
+            
+            .analytics-tab-content {
+                padding: 15px;
+            }
+            
+            .row {
+                margin: 0;
+            }
+            
+            .col-md-6 {
+                width: 100%;
+                padding: 0;
+                margin-bottom: 15px;
+            }
+            
+            /* Payment tracking mobile styles */
+            #paymentTracking {
+                padding: 10px;
+            }
+            
+            #paymentTracking .form-control {
+                margin-bottom: 10px;
+            }
+            
+            /* Service type management mobile */
+            .service-type-form {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .service-type-form .form-control {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 60px 10px 20px;
+            }
+            
+            .stats-container {
+                gap: 10px;
+            }
+            
+            .stat-card {
+                padding: 12px;
+            }
+            
+            .stat-card h3 {
+                font-size: 16px;
+            }
+            
+            .stat-card p {
+                font-size: 12px;
+            }
+            
+            .card-header h2 {
+                font-size: 18px;
+            }
+            
+            .page-title {
+                font-size: 18px;
+            }
+            
+            .btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            
+            .form-control {
+                padding: 8px;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Mobile Toggle Button -->
+    <button class="mobile-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" onclick="closeSidebar()"></div>
+    
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo">
@@ -856,33 +1089,12 @@
             }
         ];
 
-        // Custom service types array
-        let customServiceTypes = JSON.parse(localStorage.getItem('customServiceTypes')) || [];
-
-        // Get all service types (default + custom)
-        function getAllServiceTypes() {
-            const defaultServices = [
-                { value: 'logo', label: 'Logo Design' },
-                { value: 'branding', label: 'Branding Package' },
-                { value: 'web', label: 'Web Design' },
-                { value: 'social', label: 'Social Media Graphics' },
-                { value: 'print', label: 'Print Design' }
-            ];
-            
-            const customServices = customServiceTypes.map(service => ({
-                value: service.value,
-                label: service.label
-            }));
-            
-            return [...defaultServices, ...customServices];
-        }
 
         // Save data to localStorage
         function saveData() {
             localStorage.setItem('clients', JSON.stringify(clients));
             localStorage.setItem('prospects', JSON.stringify(prospects));
             localStorage.setItem('projects', JSON.stringify(projects));
-            localStorage.setItem('customServiceTypes', JSON.stringify(customServiceTypes));
         }
 
         // Force reset data to defaults
@@ -901,15 +1113,29 @@
         function forceResetData() {
             console.log('Force resetting data');
             localStorage.clear();
+            
+            // Clear all data arrays
+            clients = [];
+            prospects = [];
+            projects = [];
+            
+            // Save empty data
+            saveData();
+            
+            showNotification('All data has been force reset!', 'success');
             location.reload();
         }
 
         // Ensure data is properly initialized
         function ensureDataInitialized() {
-            // Check if clients data exists in localStorage, if not, use default data
+            // Check if clients data exists in localStorage, if not, start with empty arrays
             if (!localStorage.getItem('clients')) {
-                console.log('No clients data in localStorage, saving default data');
-                // Save default data to localStorage
+                console.log('No clients data in localStorage, starting with empty data');
+                // Initialize with empty arrays
+                clients = [];
+                prospects = [];
+                projects = [];
+                // Save empty data to localStorage
                 saveData();
             } else {
                 console.log('Loading clients from localStorage');
@@ -917,7 +1143,6 @@
                 clients = JSON.parse(localStorage.getItem('clients')) || [];
                 prospects = JSON.parse(localStorage.getItem('prospects')) || [];
                 projects = JSON.parse(localStorage.getItem('projects')) || [];
-                customServiceTypes = JSON.parse(localStorage.getItem('customServiceTypes')) || [];
             }
             
             // Ensure arrays are properly initialized
@@ -1215,6 +1440,9 @@
             // Get menu text
             const menuText = menuItem.querySelector('span').textContent;
             
+            // Close sidebar on mobile after selection
+            handleMobileMenuClick();
+            
             // Show/hide relevant sections based on menu selection
             handleMenuNavigation(menuText);
         }
@@ -1420,29 +1648,6 @@
                         </form>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Current Clients</h2>
-                        </div>
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Client</th>
-                                        <th>Service</th>
-                                        <th>Type</th>
-                                        <th>Value</th>
-                                        <th>Payment Status</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${renderClientTable()}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Revenue Analytics -->
@@ -1855,15 +2060,14 @@
                         </div>
                         <div class="form-group">
                             <label for="serviceType">Service Type</label>
-                            <div style="display: flex; gap: 10px;">
-                                <select class="form-control" id="serviceType" style="flex: 1;">
-                                    <option value="">Select service type</option>
-                                    ${getAllServiceTypes().map(service => `<option value="${service.value}">${service.label}</option>`).join('')}
-                                </select>
-                                <button type="button" class="btn" style="background: var(--primary); color: white; padding: 8px 15px;" onclick="showAddServiceTypeForm()">
-                                    <i class="fas fa-plus"></i> Add New
-                                </button>
-                            </div>
+                            <select class="form-control" id="serviceType">
+                                <option value="">Select service type</option>
+                                <option value="logo">Logo Design</option>
+                                <option value="branding">Branding Package</option>
+                                <option value="web">Web Design</option>
+                                <option value="social">Social Media Graphics</option>
+                                <option value="print">Print Design</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label>Engagement Type</label>
@@ -2896,15 +3100,14 @@
                         </div>
                         <div class="form-group">
                             <label for="projectService">Service Type</label>
-                            <div style="display: flex; gap: 10px;">
-                                <select class="form-control" id="projectService" required style="flex: 1;">
-                                    <option value="">Select service type</option>
-                                    ${getAllServiceTypes().map(service => `<option value="${service.label}">${service.label}</option>`).join('')}
-                                </select>
-                                <button type="button" class="btn" style="background: var(--primary); color: white; padding: 8px 15px;" onclick="showAddServiceTypeForm()">
-                                    <i class="fas fa-plus"></i> Add New
-                                </button>
-                            </div>
+                            <select class="form-control" id="projectService" required>
+                                <option value="">Select service type</option>
+                                <option value="Logo Design">Logo Design</option>
+                                <option value="Branding Package">Branding Package</option>
+                                <option value="Web Design">Web Design</option>
+                                <option value="Social Media Graphics">Social Media Graphics</option>
+                                <option value="Print Design">Print Design</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="projectDescription">Description</label>
@@ -3073,30 +3276,9 @@
                         <button class="btn btn-primary mt-20" onclick="importData()">Import Data</button>
                     </div>
                     <div class="form-group">
-                        <label>Service Types</label>
-                        <button class="btn" style="background: var(--info); color: white;" onclick="showServiceTypeManagement()">Manage Service Types</button>
-                    </div>
-                    <div class="form-group">
                         <label>Reset Data</label>
                         <button class="btn" style="background: var(--danger); color: white;" onclick="resetData()">Reset All Data</button>
                         <button class="btn" style="background: var(--warning); color: white; margin-left: 10px;" onclick="forceResetData()">Force Reset (Clear All)</button>
-                    </div>
-                </div>
-                
-                <div class="card" style="margin-top: 20px;">
-                    <div class="card-header">
-                        <h2 class="card-title">Debug Information</h2>
-                    </div>
-                    <div class="form-group">
-                        <label>Current Data Status</label>
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
-                            <p><strong>Clients:</strong> ${clients.length}</p>
-                            <p><strong>Contract Clients:</strong> ${clients.filter(c => c.type === 'Contract').length}</p>
-                            <p><strong>One-Time Clients:</strong> ${clients.filter(c => c.type === 'One-Time').length}</p>
-                            <p><strong>Active Clients:</strong> ${clients.filter(c => c.status === 'Active').length}</p>
-                        </div>
-                        <button class="btn" style="background: var(--info); color: white;" onclick="debugData(); alert('Check console for detailed data')">Debug Data</button>
-                        <button class="btn" style="background: var(--success); color: white; margin-left: 10px;" onclick="forceResetData()">Reset to Defaults</button>
                     </div>
                 </div>
             `;
@@ -3419,18 +3601,47 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     if (data.clients && data.prospects) {
-                        clients = data.clients;
-                        prospects = data.prospects;
-                        if (data.projects) {
-                            projects = data.projects;
-                        }
+                        // Replace all existing data with imported data
+                        clients = data.clients || [];
+                        prospects = data.prospects || [];
+                        projects = data.projects || [];
+                        
+                        // Save the imported data to localStorage
                         saveData();
+                        
+                        // Update the UI
                         updateStats();
-                        renderClientTable();
-                        renderProspectTable();
-                        showNotification('Data imported successfully!', 'success');
+                        
+                        // Show success message
+                        showNotification('Data imported successfully! All existing data has been replaced.', 'success');
+                        
+                        // Clear the file input
+                        fileInput.value = '';
+                        
+                        // Refresh the current page to show the imported data
+                        const currentPage = document.querySelector('.page-title');
+                        if (currentPage) {
+                            const pageTitle = currentPage.textContent;
+                            switch(pageTitle) {
+                                case 'Dashboard':
+                                    showDashboard();
+                                    break;
+                                case 'Clients':
+                                    showClients();
+                                    break;
+                                case 'Projects':
+                                    showProjectsPage();
+                                    break;
+                                case 'Analytics':
+                                    showAnalytics();
+                                    break;
+                                case 'Outreach':
+                                    showOutreach();
+                                    break;
+                            }
+                        }
                     } else {
-                        alert('Invalid data format');
+                        alert('Invalid data format. Please make sure the file contains clients, prospects, and projects data.');
                     }
                 } catch (error) {
                     alert('Error reading file: ' + error.message);
@@ -3441,178 +3652,25 @@
 
         function resetData() {
             if (confirm('Are you sure you want to reset all data? This action cannot be undone.')) {
+                // Clear all data from localStorage
                 localStorage.removeItem('clients');
                 localStorage.removeItem('prospects');
                 localStorage.removeItem('projects');
-                localStorage.removeItem('customServiceTypes');
+                
+                // Clear all data arrays
+                clients = [];
+                prospects = [];
+                projects = [];
+                
+                // Save empty data to localStorage
+                saveData();
+                
+                // Show notification and refresh
+                showNotification('All data has been reset successfully!', 'success');
                 location.reload();
             }
         }
 
-        // Service Type Management
-        function showAddServiceTypeForm() {
-            const serviceName = prompt('Enter the new service type name:');
-            if (!serviceName || serviceName.trim() === '') {
-                return;
-            }
-            
-            const serviceValue = serviceName.toLowerCase().replace(/\s+/g, '-');
-            
-            // Check if service already exists
-            const allServices = getAllServiceTypes();
-            if (allServices.some(service => service.value === serviceValue || service.label === serviceName)) {
-                alert('This service type already exists!');
-                return;
-            }
-            
-            // Add new service type
-            const newService = {
-                id: Date.now(),
-                value: serviceValue,
-                label: serviceName.trim()
-            };
-            
-            customServiceTypes.push(newService);
-            saveData();
-            
-            // Refresh the current form if it's a client or project form
-            const currentPage = document.querySelector('.page-title');
-            if (currentPage) {
-                if (currentPage.textContent.includes('Client')) {
-                    showAddClientForm();
-                } else if (currentPage.textContent.includes('Project')) {
-                    showAddProjectForm();
-                }
-            }
-            
-            showNotification(`Service type "${serviceName}" added successfully!`, 'success');
-        }
-
-        function showServiceTypeManagement() {
-            const mainContent = document.querySelector('.main-content');
-            mainContent.innerHTML = `
-                <div class="header">
-                    <h1 class="page-title">Service Type Management</h1>
-                    <button class="btn" onclick="showSettings()" style="background: var(--gray); color: white;"><i class="fas fa-arrow-left"></i> Back to Settings</button>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Add New Service Type</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label for="newServiceName">Service Name</label>
-                            <input type="text" class="form-control" id="newServiceName" placeholder="Enter service type name">
-                        </div>
-                        <button class="btn btn-primary" onclick="addServiceType()">
-                            <i class="fas fa-plus"></i> Add Service Type
-                        </button>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-top: 20px;">
-                    <div class="card-header">
-                        <h2 class="card-title">Current Service Types</h2>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Service Name</th>
-                                    <th>Type</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${renderServiceTypesTable()}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-        }
-
-        function addServiceType() {
-            const serviceName = document.getElementById('newServiceName').value.trim();
-            if (!serviceName) {
-                alert('Please enter a service name');
-                return;
-            }
-            
-            const serviceValue = serviceName.toLowerCase().replace(/\s+/g, '-');
-            
-            // Check if service already exists
-            const allServices = getAllServiceTypes();
-            if (allServices.some(service => service.value === serviceValue || service.label === serviceName)) {
-                alert('This service type already exists!');
-                return;
-            }
-            
-            // Add new service type
-            const newService = {
-                id: Date.now(),
-                value: serviceValue,
-                label: serviceName
-            };
-            
-            customServiceTypes.push(newService);
-            saveData();
-            
-            // Clear input
-            document.getElementById('newServiceName').value = '';
-            
-            // Refresh the table
-            showServiceTypeManagement();
-            showNotification(`Service type "${serviceName}" added successfully!`, 'success');
-        }
-
-        function renderServiceTypesTable() {
-            const defaultServices = [
-                { value: 'logo', label: 'Logo Design', type: 'Default' },
-                { value: 'branding', label: 'Branding Package', type: 'Default' },
-                { value: 'web', label: 'Web Design', type: 'Default' },
-                { value: 'social', label: 'Social Media Graphics', type: 'Default' },
-                { value: 'print', label: 'Print Design', type: 'Default' }
-            ];
-            
-            const customServices = customServiceTypes.map(service => ({
-                ...service,
-                type: 'Custom'
-            }));
-            
-            const allServices = [...defaultServices, ...customServices];
-            
-            if (allServices.length === 0) {
-                return '<tr><td colspan="3" style="text-align: center; padding: 20px; color: #666;">No service types found</td></tr>';
-            }
-            
-            return allServices.map(service => `
-                <tr>
-                    <td><strong>${service.label}</strong></td>
-                    <td>
-                        <span class="status-badge ${service.type === 'Default' ? 'status-active' : 'status-paused'}">
-                            ${service.type}
-                        </span>
-                    </td>
-                    <td>
-                        ${service.type === 'Custom' ? 
-                            `<i class="fas fa-trash" style="color: var(--danger); cursor: pointer;" onclick="deleteServiceType(${service.id})" title="Delete Service Type"></i>` :
-                            '<span style="color: #666; font-size: 12px;">Cannot delete default service</span>'
-                        }
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function deleteServiceType(serviceId) {
-            if (confirm('Are you sure you want to delete this service type? This action cannot be undone.')) {
-                customServiceTypes = customServiceTypes.filter(service => service.id !== serviceId);
-                saveData();
-                showServiceTypeManagement();
-                showNotification('Service type deleted successfully!', 'success');
-            }
-        }
 
         // Notification system
         function showNotification(message, type = 'info') {
@@ -3652,6 +3710,30 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Mobile sidebar functions
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        // Close sidebar when menu item is clicked on mobile
+        function handleMobileMenuClick() {
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        }
 
         // Initialize the dashboard when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
