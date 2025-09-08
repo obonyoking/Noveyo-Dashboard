@@ -286,6 +286,14 @@
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            height: 400px;
+            position: relative;
+        }
+        
+        .chart-card canvas {
+            max-height: 300px;
+            width: 100% !important;
+            height: 300px !important;
         }
         
         @media (max-width: 992px) {
@@ -1094,9 +1102,14 @@
 
         // Save data to localStorage
         function saveData() {
-            localStorage.setItem('clients', JSON.stringify(clients));
-            localStorage.setItem('prospects', JSON.stringify(prospects));
-            localStorage.setItem('projects', JSON.stringify(projects));
+            try {
+                localStorage.setItem('clients', JSON.stringify(clients));
+                localStorage.setItem('prospects', JSON.stringify(prospects));
+                localStorage.setItem('projects', JSON.stringify(projects));
+                console.log('Data saved successfully');
+            } catch (error) {
+                console.error('Error saving data:', error);
+            }
         }
 
         // Force reset data to defaults
@@ -1534,10 +1547,10 @@
                     </div>
                 </div>
 
+
                 <!-- Tabs -->
                 <div class="tabs">
                     <div class="tab active">Client Management</div>
-                    <div class="tab">Revenue Analytics</div>
                     <div class="tab">Outreach Tracking</div>
                 </div>
 
@@ -1655,40 +1668,6 @@
 
                 </div>
 
-                <!-- Revenue Analytics -->
-                <div class="tab-content">
-                    <div class="chart-container">
-                        <div class="chart-card">
-                            <h2 class="card-title mb-20">Revenue by Service Type</h2>
-                            <canvas id="revenueChart"></canvas>
-                        </div>
-                        <div class="chart-card">
-                            <h2 class="card-title mb-20">Monthly Revenue</h2>
-                            <canvas id="monthlyRevenueChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <div class="card mt-20">
-                        <div class="card-header">
-                            <h2 class="card-title">Revenue Summary</h2>
-                        </div>
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Service Type</th>
-                                        <th>Number of Projects</th>
-                                        <th>Total Revenue</th>
-                                        <th>Average Project Value</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${renderRevenueSummaryTable()}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Outreach Tracking -->
                 <div class="tab-content">
@@ -1805,11 +1784,11 @@
                         <div id="analytics-overview" class="analytics-tab-content">
                             <!-- Horizontal Overview Tabs -->
                             <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                                <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px;">
+                                <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: #6C63FF; color: white; border-radius: 8px;">
                                     <h3 style="margin: 0; font-size: 1.8rem;">${stats.totalClients}</h3>
                                     <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 0.9rem;">Total Clients</p>
                                 </div>
-                                <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; border-radius: 8px;">
+                                <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: #28A745; color: white; border-radius: 8px;">
                                     <h3 style="margin: 0; font-size: 1.8rem;">KSh ${stats.totalRevenue.toLocaleString()}</h3>
                                     <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 0.9rem;">Total Revenue</p>
                                 </div>
@@ -1817,21 +1796,21 @@
                             
                             <!-- Additional Metrics Row -->
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <div style="flex: 1; min-width: 150px; text-align: center; padding: 12px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #333; border-radius: 8px;">
+                                <div style="flex: 1; min-width: 150px; text-align: center; padding: 12px; background: #4ECDC4; color: white; border-radius: 8px;">
                                     <h4 style="margin: 0; font-size: 1.5rem;">${stats.activeClients}</h4>
-                                    <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 0.85rem;">Active</p>
+                                    <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 0.85rem;">Active</p>
                                 </div>
-                                <div style="flex: 1; min-width: 150px; text-align: center; padding: 12px; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #333; border-radius: 8px;">
+                                <div style="flex: 1; min-width: 150px; text-align: center; padding: 12px; background: #FFC107; color: #333; border-radius: 8px;">
                                     <h4 style="margin: 0; font-size: 1.5rem;">${stats.pausedClients}</h4>
                                     <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 0.85rem;">Paused</p>
                                 </div>
-                                <div style="flex: 1; min-width: 150px; text-align: center; padding: 12px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; border-radius: 8px;">
+                                <div style="flex: 1; min-width: 150px; text-align: center; padding: 12px; background: #6C757D; color: white; border-radius: 8px;">
                                     <h4 style="margin: 0; font-size: 1.5rem;">${stats.closedClients}</h4>
-                                    <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 0.85rem;">Closed</p>
+                                    <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 0.85rem;">Closed</p>
                                 </div>
-                                <div style="flex: 1; min-width: 150px; text-align: center; padding: 12px; background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); color: #333; border-radius: 8px;">
+                                <div style="flex: 1; min-width: 150px; text-align: center; padding: 12px; background: #DC3545; color: white; border-radius: 8px;">
                                     <h4 style="margin: 0; font-size: 1.5rem;">KSh ${stats.pendingRevenue.toLocaleString()}</h4>
-                                    <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 0.85rem;">Pending</p>
+                                    <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 0.85rem;">Pending</p>
                                 </div>
                             </div>
                         </div>
@@ -2273,11 +2252,8 @@
                     // Show corresponding content
                     if (target === 'Client Management') {
                         document.querySelectorAll('.tab-content')[0].classList.add('active');
-                    } else if (target === 'Revenue Analytics') {
-                        document.querySelectorAll('.tab-content')[1].classList.add('active');
-                        renderCharts();
                     } else if (target === 'Outreach Tracking') {
-                        document.querySelectorAll('.tab-content')[2].classList.add('active');
+                        document.querySelectorAll('.tab-content')[1].classList.add('active');
                     }
                 });
             });
@@ -2844,113 +2820,7 @@
             if (statCards[3]) statCards[3].textContent = pendingProposals;
         }
 
-        // Charts
-        function renderCharts() {
-            // Destroy existing charts if they exist
-            if (window.revenueChart) window.revenueChart.destroy();
-            if (window.monthlyChart) window.monthlyChart.destroy();
 
-            // Calculate revenue by service type using the proper function
-            const revenueByService = calculateRevenueByService();
-            const monthlyRevenue = calculateMonthlyRevenue();
-
-            // Revenue by service type chart
-            const revenueCtx = document.getElementById('revenueChart');
-            if (revenueCtx) {
-                const labels = Object.keys(revenueByService);
-                const data = Object.values(revenueByService).map(service => service.revenueCollected);
-                const colors = [
-                    '#6C63FF', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', 
-                    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
-                ];
-                
-                window.revenueChart = new Chart(revenueCtx.getContext('2d'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: data,
-                            backgroundColor: colors.slice(0, labels.length),
-                            borderWidth: 2,
-                            borderColor: '#fff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 20,
-                                    usePointStyle: true
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.parsed;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                        return `${label}: KSh ${value.toLocaleString()} (${percentage}%)`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-            
-            // Monthly revenue chart
-            const monthlyCtx = document.getElementById('monthlyRevenueChart');
-            if (monthlyCtx) {
-                const labels = Object.keys(monthlyRevenue);
-                const data = Object.values(monthlyRevenue);
-                
-                window.monthlyChart = new Chart(monthlyCtx.getContext('2d'), {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Monthly Revenue (KSh)',
-                            data: data,
-                            backgroundColor: 'rgba(108, 99, 255, 0.8)',
-                            borderColor: 'rgba(108, 99, 255, 1)',
-                            borderWidth: 2,
-                            borderRadius: 4,
-                            borderSkipped: false,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return 'KSh ' + value.toLocaleString();
-                                    }
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return 'Revenue: KSh ' + context.parsed.y.toLocaleString();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
 
         // Projects page
         function showProjectsPage() {
@@ -3414,6 +3284,10 @@
             }, 100);
         }
 
+
+
+
+
         // Calculate revenue by service type
         function calculateRevenueByService() {
             const serviceRevenue = {};
@@ -3466,17 +3340,18 @@
             return monthlyData;
         }
 
-        // Render revenue summary table for dashboard
-        function renderRevenueSummaryTable() {
-            const revenueByService = calculateRevenueByService();
+        // Render revenue summary table
+        function renderRevenueSummaryTable(revenueByService) {
             return Object.entries(revenueByService).map(([service, data]) => {
-                const averageValue = data.totalProjects > 0 ? (data.totalValue / data.totalProjects) : 0;
+                const completionRate = data.totalValue > 0 ? ((data.revenueCollected / data.totalValue) * 100).toFixed(1) : 0;
                 return `
                     <tr>
                         <td><strong>${service}</strong></td>
                         <td>${data.totalProjects}</td>
                         <td>KSh ${data.totalValue.toLocaleString()}</td>
-                        <td>KSh ${averageValue.toLocaleString()}</td>
+                        <td class="text-success">KSh ${data.revenueCollected.toLocaleString()}</td>
+                        <td class="text-warning">KSh ${data.pendingRevenue.toLocaleString()}</td>
+                        <td>${completionRate}%</td>
                     </tr>
                 `;
             }).join('');
@@ -3753,9 +3628,18 @@
         // Ensure data consistency across all views
         function ensureDataConsistency() {
             // Reload data from localStorage to ensure we have the latest
-            clients = JSON.parse(localStorage.getItem('clients')) || [];
-            prospects = JSON.parse(localStorage.getItem('prospects')) || [];
-            projects = JSON.parse(localStorage.getItem('projects')) || [];
+            const storedClients = localStorage.getItem('clients');
+            const storedProspects = localStorage.getItem('prospects');
+            const storedProjects = localStorage.getItem('projects');
+            
+            clients = storedClients ? JSON.parse(storedClients) : [];
+            prospects = storedProspects ? JSON.parse(storedProspects) : [];
+            projects = storedProjects ? JSON.parse(storedProjects) : [];
+            
+            // Ensure arrays are valid
+            if (!Array.isArray(clients)) clients = [];
+            if (!Array.isArray(prospects)) prospects = [];
+            if (!Array.isArray(projects)) projects = [];
             
             console.log('Data refreshed - Clients:', clients.length, 'Prospects:', prospects.length, 'Projects:', projects.length);
         }
@@ -3801,7 +3685,6 @@
             initializeForms();
             initializeSearch();
             updateStats();
-            renderCharts();
             console.log('Dashboard initialization complete');
         });
 
@@ -3811,6 +3694,11 @@
             clearTimeout(window.resizeTimeout);
             window.resizeTimeout = setTimeout(refreshDataOnResize, 250);
         });
+
+        // Add periodic data sync to ensure consistency
+        setInterval(function() {
+            ensureDataConsistency();
+        }, 5000); // Sync every 5 seconds
     </script>
 </body>
 </html>
