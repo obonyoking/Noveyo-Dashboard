@@ -1450,6 +1450,9 @@
         }
 
         function handleMenuNavigation(menuText) {
+            // Ensure data consistency before switching pages
+            ensureDataConsistency();
+            
             // Update page title
             const pageTitle = document.querySelector('.page-title');
             if (pageTitle) {
@@ -1680,36 +1683,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>Logo Design</td>
-                                        <td>12</td>
-                                        <td>KSh 9,600</td>
-                                        <td>KSh 800</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Branding Package</td>
-                                        <td>8</td>
-                                        <td>KSh 28,500</td>
-                                        <td>KSh 3,562</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Web Design</td>
-                                        <td>5</td>
-                                        <td>KSh 31,200</td>
-                                        <td>KSh 6,240</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Social Media Graphics</td>
-                                        <td>15</td>
-                                        <td>KSh 12,000</td>
-                                        <td>KSh 800</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Print Design</td>
-                                        <td>7</td>
-                                        <td>KSh 8,400</td>
-                                        <td>KSh 1,200</td>
-                                    </tr>
+                                    ${renderRevenueSummaryTable()}
                                 </tbody>
                             </table>
                         </div>
@@ -2871,67 +2845,106 @@
         }
 
         // Charts
-            function renderCharts() {
+        function renderCharts() {
             // Destroy existing charts if they exist
             if (window.revenueChart) window.revenueChart.destroy();
             if (window.monthlyChart) window.monthlyChart.destroy();
 
-            // Calculate revenue by service type
-            const serviceRevenue = {};
-            clients.forEach(client => {
-                serviceRevenue[client.service] = (serviceRevenue[client.service] || 0) + client.value;
-            });
+            // Calculate revenue by service type using the proper function
+            const revenueByService = calculateRevenueByService();
+            const monthlyRevenue = calculateMonthlyRevenue();
 
-                // Revenue by service type chart
+            // Revenue by service type chart
             const revenueCtx = document.getElementById('revenueChart');
             if (revenueCtx) {
+                const labels = Object.keys(revenueByService);
+                const data = Object.values(revenueByService).map(service => service.revenueCollected);
+                const colors = [
+                    '#6C63FF', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', 
+                    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+                ];
+                
                 window.revenueChart = new Chart(revenueCtx.getContext('2d'), {
                     type: 'doughnut',
                     data: {
-                        labels: Object.keys(serviceRevenue),
+                        labels: labels,
                         datasets: [{
-                            data: Object.values(serviceRevenue),
-                            backgroundColor: [
-                                '#6C63FF',
-                                '#4ECDC4',
-                                '#FFC107',
-                                '#DC3545',
-                                '#28A745'
-                            ]
+                            data: data,
+                            backgroundColor: colors.slice(0, labels.length),
+                            borderWidth: 2,
+                            borderColor: '#fff'
                         }]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'right'
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return `${label}: KSh ${value.toLocaleString()} (${percentage}%)`;
+                                    }
+                                }
                             }
                         }
                     }
                 });
             }
             
-            // Monthly revenue chart (simplified for demo)
+            // Monthly revenue chart
             const monthlyCtx = document.getElementById('monthlyRevenueChart');
             if (monthlyCtx) {
-                const totalRevenue = clients.reduce((sum, client) => sum + client.value, 0);
-                const monthlyData = Array.from({length: 6}, (_, i) => Math.floor(totalRevenue / 6 * (0.8 + Math.random() * 0.4)));
+                const labels = Object.keys(monthlyRevenue);
+                const data = Object.values(monthlyRevenue);
                 
                 window.monthlyChart = new Chart(monthlyCtx.getContext('2d'), {
                     type: 'bar',
                     data: {
-                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        labels: labels,
                         datasets: [{
-                            label: 'Monthly Revenue ($)',
-                            data: monthlyData,
-                            backgroundColor: '#6C63FF'
+                            label: 'Monthly Revenue (KSh)',
+                            data: data,
+                            backgroundColor: 'rgba(108, 99, 255, 0.8)',
+                            borderColor: 'rgba(108, 99, 255, 1)',
+                            borderWidth: 2,
+                            borderRadius: 4,
+                            borderSkipped: false,
                         }]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         scales: {
                             y: {
-                                beginAtZero: true
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return 'KSh ' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Revenue: KSh ' + context.parsed.y.toLocaleString();
+                                    }
+                                }
                             }
                         }
                     }
@@ -3278,8 +3291,9 @@
                         <button class="btn btn-primary mt-20" onclick="importData()">Import Data</button>
                     </div>
                     <div class="form-group">
-                        <label>Reset Data</label>
-                        <button class="btn" style="background: var(--danger); color: white;" onclick="resetData()">Reset All Data</button>
+                        <label>Data Management</label>
+                        <button class="btn" style="background: var(--info); color: white;" onclick="ensureDataConsistency(); showNotification('Data refreshed successfully!', 'success');">Refresh Data</button>
+                        <button class="btn" style="background: var(--danger); color: white; margin-left: 10px;" onclick="resetData()">Reset All Data</button>
                         <button class="btn" style="background: var(--warning); color: white; margin-left: 10px;" onclick="forceResetData()">Force Reset (Clear All)</button>
                     </div>
                 </div>
@@ -3452,18 +3466,17 @@
             return monthlyData;
         }
 
-        // Render revenue summary table
-        function renderRevenueSummaryTable(revenueByService) {
+        // Render revenue summary table for dashboard
+        function renderRevenueSummaryTable() {
+            const revenueByService = calculateRevenueByService();
             return Object.entries(revenueByService).map(([service, data]) => {
-                const completionRate = data.totalValue > 0 ? ((data.revenueCollected / data.totalValue) * 100).toFixed(1) : 0;
+                const averageValue = data.totalProjects > 0 ? (data.totalValue / data.totalProjects) : 0;
                 return `
                     <tr>
                         <td><strong>${service}</strong></td>
                         <td>${data.totalProjects}</td>
                         <td>KSh ${data.totalValue.toLocaleString()}</td>
-                        <td class="text-success">KSh ${data.revenueCollected.toLocaleString()}</td>
-                        <td class="text-warning">KSh ${data.pendingRevenue.toLocaleString()}</td>
-                        <td>${completionRate}%</td>
+                        <td>KSh ${averageValue.toLocaleString()}</td>
                     </tr>
                 `;
             }).join('');
@@ -3737,6 +3750,48 @@
             }
         }
 
+        // Ensure data consistency across all views
+        function ensureDataConsistency() {
+            // Reload data from localStorage to ensure we have the latest
+            clients = JSON.parse(localStorage.getItem('clients')) || [];
+            prospects = JSON.parse(localStorage.getItem('prospects')) || [];
+            projects = JSON.parse(localStorage.getItem('projects')) || [];
+            
+            console.log('Data refreshed - Clients:', clients.length, 'Prospects:', prospects.length, 'Projects:', projects.length);
+        }
+
+        // Refresh data on window resize to ensure consistency between desktop and mobile
+        function refreshDataOnResize() {
+            // Ensure data is fresh
+            ensureDataConsistency();
+            
+            // Get current page
+            const currentPage = document.querySelector('.page-title');
+            if (currentPage) {
+                const pageTitle = currentPage.textContent;
+                switch(pageTitle) {
+                    case 'Dashboard':
+                        showDashboard();
+                        break;
+                    case 'Clients':
+                        showClients();
+                        break;
+                    case 'Projects':
+                        showProjectsPage();
+                        break;
+                    case 'Analytics':
+                        showAnalytics();
+                        break;
+                    case 'Outreach':
+                        showOutreach();
+                        break;
+                    case 'Settings':
+                        showSettings();
+                        break;
+                }
+            }
+        }
+
         // Initialize the dashboard when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM Content Loaded - Initializing dashboard');
@@ -3748,6 +3803,13 @@
             updateStats();
             renderCharts();
             console.log('Dashboard initialization complete');
+        });
+
+        // Add window resize listener to refresh data when switching between desktop and mobile
+        window.addEventListener('resize', function() {
+            // Debounce the resize event to avoid too many calls
+            clearTimeout(window.resizeTimeout);
+            window.resizeTimeout = setTimeout(refreshDataOnResize, 250);
         });
     </script>
 </body>
