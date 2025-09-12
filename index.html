@@ -1464,6 +1464,80 @@
             }
         }
 
+        // UI functions for Settings page
+        function checkFirebaseStatusUI() {
+            const statusDiv = document.getElementById('firebaseStatus');
+            const statusText = document.getElementById('statusText');
+            
+            if (window.db) {
+                statusDiv.style.background = '#d4edda';
+                statusDiv.style.borderColor = '#c3e6cb';
+                statusText.innerHTML = '<i class="fas fa-check-circle" style="color: #28a745;"></i> Firebase is connected and ready';
+            } else {
+                statusDiv.style.background = '#f8d7da';
+                statusDiv.style.borderColor = '#f5c6cb';
+                statusText.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> Firebase is not connected';
+            }
+        }
+
+        async function syncToFirebaseUI() {
+            const button = event.target;
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+            button.disabled = true;
+            
+            try {
+                await syncToFirebase();
+                showNotification('Data synced to Firebase successfully!', 'success');
+            } catch (error) {
+                showNotification('Error syncing to Firebase: ' + error.message, 'error');
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
+        async function restoreFromFirebaseUI() {
+            if (!confirm('This will overwrite your current data with data from Firebase. Are you sure?')) {
+                return;
+            }
+            
+            const button = event.target;
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restoring...';
+            button.disabled = true;
+            
+            try {
+                await restoreFromFirebase();
+                showNotification('Data restored from Firebase successfully!', 'success');
+            } catch (error) {
+                showNotification('Error restoring from Firebase: ' + error.message, 'error');
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
+        async function syncFromFirebaseUI() {
+            const button = event.target;
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+            button.disabled = true;
+            
+            try {
+                await syncFromFirebase();
+                showNotification('Data synced from Firebase successfully!', 'success');
+            } catch (error) {
+                showNotification('Error syncing from Firebase: ' + error.message, 'error');
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
         // Make functions available globally
         window.testNavigation = testNavigation;
         window.testClick = testClick;
@@ -1473,6 +1547,10 @@
         window.restoreFromFirebase = restoreFromFirebase;
         window.syncFromFirebase = syncFromFirebase;
         window.checkFirebaseStatus = checkFirebaseStatus;
+        window.checkFirebaseStatusUI = checkFirebaseStatusUI;
+        window.syncToFirebaseUI = syncToFirebaseUI;
+        window.restoreFromFirebaseUI = restoreFromFirebaseUI;
+        window.syncFromFirebaseUI = syncFromFirebaseUI;
 
         // Toggle contract options visibility
         function toggleContractOptions() {
@@ -4847,27 +4925,75 @@
                 <div class="header">
                     <h1 class="page-title">Settings</h1>
                 </div>
+                
+                <!-- Firebase Sync Section -->
                 <div class="card">
                     <div class="card-header">
-                        <h2 class="card-title">Dashboard Settings</h2>
+                        <h2 class="card-title">Cloud Backup & Sync</h2>
+                        <p style="color: var(--gray); margin: 0;">Manage your data backup and synchronization with Firebase</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Firebase Status</label>
+                        <div id="firebaseStatus" style="padding: 10px; border-radius: 8px; margin-bottom: 15px; background: #f8f9fa; border: 1px solid #e9ecef;">
+                            <span id="statusText">Checking connection...</span>
+                        </div>
+                        <button class="btn" style="background: var(--info); color: white;" onclick="checkFirebaseStatusUI()">Check Status</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Sync to Firebase</label>
+                        <p style="color: var(--gray); font-size: 14px; margin: 5px 0;">Upload your current data to Firebase cloud storage</p>
+                        <button class="btn btn-primary" onclick="syncToFirebaseUI()">
+                            <i class="fas fa-cloud-upload-alt"></i> Sync to Firebase
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label>Restore from Firebase</label>
+                        <p style="color: var(--gray); font-size: 14px; margin: 5px 0;">Download and restore your data from Firebase (overwrites current data)</p>
+                        <button class="btn" style="background: var(--warning); color: white;" onclick="restoreFromFirebaseUI()">
+                            <i class="fas fa-cloud-download-alt"></i> Restore from Firebase
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label>Sync from Firebase</label>
+                        <p style="color: var(--gray); font-size: 14px; margin: 5px 0;">Download latest changes from Firebase (merges with current data)</p>
+                        <button class="btn" style="background: var(--success); color: white;" onclick="syncFromFirebaseUI()">
+                            <i class="fas fa-sync-alt"></i> Sync from Firebase
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Data Management Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Data Management</h2>
                     </div>
                     <div class="form-group">
                         <label>Export Data</label>
-                        <button class="btn btn-primary" onclick="exportData()">Export All Data</button>
+                        <p style="color: var(--gray); font-size: 14px; margin: 5px 0;">Download a backup file of all your data</p>
+                        <button class="btn btn-primary" onclick="exportData()">
+                            <i class="fas fa-download"></i> Export All Data
+                        </button>
                     </div>
                     <div class="form-group">
                         <label>Import Data</label>
+                        <p style="color: var(--gray); font-size: 14px; margin: 5px 0;">Upload a backup file to restore your data</p>
                         <input type="file" class="form-control" id="importFile" accept=".json">
-                        <button class="btn btn-primary mt-20" onclick="importData()">Import Data</button>
+                        <button class="btn btn-primary mt-20" onclick="importData()">
+                            <i class="fas fa-upload"></i> Import Data
+                        </button>
                     </div>
                     <div class="form-group">
-                        <label>Data Management</label>
-                        <button class="btn" style="background: var(--info); color: white;" onclick="ensureDataConsistency(); showNotification('Data refreshed successfully!', 'success');">Refresh Data</button>
-                        <button class="btn" style="background: var(--danger); color: white; margin-left: 10px;" onclick="resetData()">Reset All Data</button>
-                        <button class="btn" style="background: var(--warning); color: white; margin-left: 10px;" onclick="forceResetData()">Force Reset (Clear All)</button>
+                        <label>Refresh Data</label>
+                        <p style="color: var(--gray); font-size: 14px; margin: 5px 0;">Reload data from storage to ensure you have the latest version</p>
+                        <button class="btn" style="background: var(--info); color: white;" onclick="ensureDataConsistency(); showNotification('Data refreshed successfully!', 'success');">
+                            <i class="fas fa-refresh"></i> Refresh Data
+                        </button>
                     </div>
                 </div>
             `;
+            
+            // Check Firebase status when settings page loads
+            setTimeout(checkFirebaseStatusUI, 500);
         }
 
         // Analytics page
