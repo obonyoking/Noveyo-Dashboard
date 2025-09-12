@@ -591,6 +591,113 @@
             .service-type-form .form-control {
                 flex: 1;
             }
+            
+            /* Expense tracker mobile styles */
+            .expense-form .row {
+                flex-direction: column;
+                margin: 0;
+            }
+            
+            .expense-form .col-md-6 {
+                width: 100%;
+                padding: 0;
+                margin-bottom: 15px;
+            }
+            
+            .expense-form .form-group {
+                margin-bottom: 15px;
+            }
+            
+            .expense-form .form-control {
+                font-size: 16px;
+                padding: 12px;
+            }
+            
+            .expense-form .btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+                margin-top: 10px;
+            }
+            
+            /* Expense table mobile optimization */
+            .expenses-table {
+                font-size: 12px;
+            }
+            
+            .expenses-table th,
+            .expenses-table td {
+                padding: 8px 4px;
+                white-space: nowrap;
+            }
+            
+            .expenses-table .status-badge {
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+            
+            /* Expense stats mobile */
+            .expense-stats .stat-card {
+                padding: 12px;
+                margin-bottom: 10px;
+            }
+            
+            .expense-stats .stat-card h3 {
+                font-size: 16px;
+            }
+            
+            .expense-stats .stat-card p {
+                font-size: 11px;
+            }
+            
+            /* Revenue vs expense chart mobile */
+            #revenueExpenseChart {
+                height: 200px !important;
+            }
+            
+            .chart-container {
+                padding: 10px;
+            }
+            
+            /* Mobile touch targets */
+            .expense-form .btn,
+            .expense-form .form-control {
+                min-height: 44px;
+                touch-action: manipulation;
+            }
+            
+            .expenses-table .fas {
+                min-width: 20px;
+                min-height: 20px;
+                padding: 4px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            /* Mobile table improvements */
+            .expenses-table {
+                border-collapse: separate;
+                border-spacing: 0;
+            }
+            
+            .expenses-table th {
+                position: sticky;
+                top: 0;
+                background: var(--light);
+                z-index: 10;
+            }
+            
+            /* Mobile form improvements */
+            .expense-form .form-group {
+                margin-bottom: 20px;
+            }
+            
+            .expense-form label {
+                font-weight: 600;
+                margin-bottom: 8px;
+                display: block;
+            }
         }
 
         @media (max-width: 480px) {
@@ -630,6 +737,42 @@
             .form-control {
                 padding: 8px;
                 font-size: 12px;
+            }
+            
+            /* Expense tracker mobile styles for small screens */
+            .expense-form .form-control {
+                font-size: 16px;
+                padding: 10px;
+            }
+            
+            .expense-form .btn {
+                font-size: 14px;
+                padding: 10px;
+            }
+            
+            .expenses-table {
+                font-size: 10px;
+            }
+            
+            .expenses-table th,
+            .expenses-table td {
+                padding: 6px 2px;
+            }
+            
+            .expense-stats .stat-card {
+                padding: 10px;
+            }
+            
+            .expense-stats .stat-card h3 {
+                font-size: 14px;
+            }
+            
+            .expense-stats .stat-card p {
+                font-size: 10px;
+            }
+            
+            #revenueExpenseChart {
+                height: 150px !important;
             }
         }
     </style>
@@ -3060,7 +3203,7 @@
                 </div>
 
                 <!-- Expense Stats -->
-                <div class="stats-container">
+                <div class="stats-container expense-stats">
                     <div class="stat-card">
                         <div class="stat-icon" style="background: rgba(220, 53, 69, 0.1); color: var(--danger);">
                             <i class="fas fa-receipt"></i>
@@ -3104,7 +3247,7 @@
                     <div class="card-header">
                         <h2 class="card-title">Revenue vs Expenses</h2>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body chart-container">
                         <canvas id="revenueExpenseChart" width="400" height="200"></canvas>
                     </div>
                 </div>
@@ -3115,7 +3258,7 @@
                         <h2 class="card-title">Recent Expenses</h2>
                     </div>
                     <div class="table-responsive">
-                        <table>
+                        <table class="expenses-table">
                             <thead>
                                 <tr>
                                     <th>Date</th>
@@ -3148,6 +3291,77 @@
 
             // Initialize chart
             initializeRevenueExpenseChart();
+            
+            // Initialize mobile-specific functionality
+            initializeExpenseMobileFeatures();
+        }
+
+        // Initialize mobile-specific features for expense tracker
+        function initializeExpenseMobileFeatures() {
+            if (window.innerWidth <= 768) {
+                // Add touch-friendly event listeners
+                const expenseRows = document.querySelectorAll('#expensesTableBody tr');
+                expenseRows.forEach(row => {
+                    // Add touch feedback for mobile
+                    row.addEventListener('touchstart', function() {
+                        this.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+                    });
+                    
+                    row.addEventListener('touchend', function() {
+                        this.style.backgroundColor = '';
+                    });
+                });
+                
+                // Optimize form inputs for mobile
+                const formInputs = document.querySelectorAll('.expense-form input, .expense-form select, .expense-form textarea');
+                formInputs.forEach(input => {
+                    // Prevent zoom on focus for iOS
+                    if (input.type === 'text' || input.type === 'email' || input.type === 'tel' || input.type === 'number') {
+                        input.style.fontSize = '16px';
+                    }
+                    
+                    // Add touch-friendly styling
+                    input.addEventListener('focus', function() {
+                        this.style.borderColor = 'var(--primary)';
+                        this.style.boxShadow = '0 0 0 2px rgba(0, 123, 255, 0.25)';
+                    });
+                    
+                    input.addEventListener('blur', function() {
+                        this.style.borderColor = '';
+                        this.style.boxShadow = '';
+                    });
+                });
+                
+                // Add swipe gestures for table navigation (if needed)
+                let startX = 0;
+                let startY = 0;
+                
+                const tableContainer = document.querySelector('.table-responsive');
+                if (tableContainer) {
+                    tableContainer.addEventListener('touchstart', function(e) {
+                        startX = e.touches[0].clientX;
+                        startY = e.touches[0].clientY;
+                    });
+                    
+                    tableContainer.addEventListener('touchend', function(e) {
+                        const endX = e.changedTouches[0].clientX;
+                        const endY = e.changedTouches[0].clientY;
+                        const diffX = startX - endX;
+                        const diffY = startY - endY;
+                        
+                        // Horizontal swipe detection
+                        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                            if (diffX > 0) {
+                                // Swipe left - scroll right
+                                this.scrollLeft += 100;
+                            } else {
+                                // Swipe right - scroll left
+                                this.scrollLeft -= 100;
+                            }
+                        }
+                    });
+                }
+            }
         }
 
         // Expense form
@@ -3163,7 +3377,7 @@
                     <div class="card-header">
                         <h2 class="card-title">Expense Details</h2>
                     </div>
-                    <form id="expenseForm">
+                    <form id="expenseForm" class="expense-form">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -3251,6 +3465,9 @@
             if (form) {
                 form.addEventListener('submit', handleExpenseSubmit);
             }
+            
+            // Initialize mobile features for form
+            initializeExpenseMobileFeatures();
         }
 
         // Handle expense form submission
@@ -3304,21 +3521,21 @@
             
             return expenses.sort((a, b) => new Date(b.date) - new Date(a.date)).map(expense => `
                 <tr>
-                    <td>${new Date(expense.date).toLocaleDateString()}</td>
+                    <td style="font-size: 11px;">${new Date(expense.date).toLocaleDateString()}</td>
                     <td>
-                        <span class="status-badge" style="background: ${getCategoryColor(expense.category)}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px;">
+                        <span class="status-badge" style="background: ${getCategoryColor(expense.category)}; color: white; padding: 2px 6px; border-radius: 10px; font-size: 9px; white-space: nowrap;">
                             ${expense.category}
                         </span>
                     </td>
-                    <td>${expense.description}</td>
-                    <td>${expense.vendor || 'N/A'}</td>
-                    <td>KSh ${expense.amount.toLocaleString()}</td>
+                    <td style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${expense.description}">${expense.description}</td>
+                    <td style="max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${expense.vendor || 'N/A'}">${expense.vendor || 'N/A'}</td>
+                    <td style="font-weight: bold; color: var(--danger);">KSh ${expense.amount.toLocaleString()}</td>
                     <td>
-                        <span class="status-badge status-${expense.status.toLowerCase()}">${expense.status}</span>
+                        <span class="status-badge status-${expense.status.toLowerCase()}" style="font-size: 9px; padding: 2px 6px;">${expense.status}</span>
                     </td>
-                    <td>
-                        <i class="fas fa-edit" style="color: var(--primary); cursor: pointer; margin-right: 10px;" onclick="editExpense(${expense.id})" title="Edit Expense"></i>
-                        <i class="fas fa-trash" style="color: var(--danger); cursor: pointer;" onclick="deleteExpense(${expense.id})" title="Delete Expense"></i>
+                    <td style="white-space: nowrap;">
+                        <i class="fas fa-edit" style="color: var(--primary); cursor: pointer; margin-right: 8px; font-size: 12px;" onclick="editExpense(${expense.id})" title="Edit Expense"></i>
+                        <i class="fas fa-trash" style="color: var(--danger); cursor: pointer; font-size: 12px;" onclick="deleteExpense(${expense.id})" title="Delete Expense"></i>
                     </td>
                 </tr>
             `).join('');
