@@ -12,7 +12,7 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -35,6 +35,7 @@
         window.doc = doc;
         window.updateDoc = updateDoc;
         window.deleteDoc = deleteDoc;
+        window.setDoc = setDoc;
         window.onSnapshot = onSnapshot;
         window.query = query;
         window.orderBy = orderBy;
@@ -1140,6 +1141,9 @@
         ];
 
         let invoices = [];
+        
+        // Firebase sync settings
+        let autoSyncEnabled = false;
 
 
         // Save data to localStorage
@@ -1151,8 +1155,9 @@
                 localStorage.setItem('invoices', JSON.stringify(invoices));
                 console.log('Data saved to localStorage');
                 
-                // Optional: Sync to Firebase if available
-                if (window.db) {
+                // Optional: Sync to Firebase if auto-sync is enabled
+                if (window.db && autoSyncEnabled) {
+                    console.log('Auto-sync enabled, syncing to Firebase...');
                     syncToFirebase();
                 }
             } catch (error) {
@@ -1166,15 +1171,25 @@
                 if (!window.db) return;
                 
                 console.log('Syncing to Firebase...');
+                console.log('Current local data - Clients:', clients.length, 'Prospects:', prospects.length, 'Projects:', projects.length, 'Invoices:', invoices.length);
+                
+                // Clear all Firebase data first to prevent duplicates
+                await clearFirebaseData();
+                
+                // Minimal delay after clearing
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
                 // Sync clients
                 await syncCollectionToFirebase('clients', clients);
+                await new Promise(resolve => setTimeout(resolve, 200));
                 
                 // Sync prospects
                 await syncCollectionToFirebase('prospects', prospects);
+                await new Promise(resolve => setTimeout(resolve, 200));
                 
                 // Sync projects
                 await syncCollectionToFirebase('projects', projects);
+                await new Promise(resolve => setTimeout(resolve, 200));
                 
                 // Sync invoices
                 await syncCollectionToFirebase('invoices', invoices);
@@ -1185,25 +1200,45 @@
             }
         }
 
-        // Sync a collection to Firebase
+        // Sync a collection to Firebase with optimized throttling
         async function syncCollectionToFirebase(collectionName, data) {
             try {
                 if (!window.db || !data || data.length === 0) return;
                 
-                // Get existing Firebase data
-                const snapshot = await getDocs(collection(window.db, collectionName));
-                const existingIds = new Set(snapshot.docs.map(doc => doc.id));
+                console.log(`Syncing ${collectionName} to Firebase (${data.length} items)`);
                 
-                // Add/update items
-                for (const item of data) {
-                    if (item.id) {
-                        const docRef = doc(window.db, collectionName, item.id.toString());
-                        await updateDoc(docRef, item).catch(async () => {
-                            // If update fails, try to add
-                            await addDoc(collection(window.db, collectionName), item);
-                        });
+                // Process items in larger batches for faster sync
+                const batchSize = 10;
+                for (let i = 0; i < data.length; i += batchSize) {
+                    const batch = data.slice(i, i + batchSize);
+                    
+                    // Process batch with minimal delays
+                    for (const item of batch) {
+                        if (item.id) {
+                            try {
+                                // Use the original ID as the document ID
+                                const docId = item.id.toString();
+                                const docRef = doc(window.db, collectionName, docId);
+                                
+                                // Remove firebaseId from the data before saving to avoid storing it
+                                const { firebaseId, ...itemData } = item;
+                                await setDoc(docRef, itemData);
+                                
+                                // Minimal delay between writes
+                                await new Promise(resolve => setTimeout(resolve, 50));
+                            } catch (error) {
+                                console.log(`Failed to sync item ${item.id} in ${collectionName}:`, error.message);
+                            }
+                        }
+                    }
+                    
+                    // Shorter delay between batches
+                    if (i + batchSize < data.length) {
+                        await new Promise(resolve => setTimeout(resolve, 200));
                     }
                 }
+                
+                console.log(`Successfully synced ${data.length} ${collectionName} to Firebase`);
             } catch (error) {
                 console.log(`Firebase sync failed for ${collectionName}:`, error.message);
             }
@@ -1291,7 +1326,7 @@
                 if (!loadedFromFirebase) {
                     console.log('No Firebase data found, starting with sample data');
                     // Initialize with sample data
-                    saveData();
+                saveData();
                 }
             } else {
                 console.log('Loading clients from localStorage');
@@ -1350,16 +1385,18 @@
 
         // Manual sync functions
         function enableFirebaseSync() {
+            autoSyncEnabled = true;
+            console.log('Firebase auto-sync enabled');
+            updateAutoSyncStatus();
             if (window.db) {
-                console.log('Firebase sync enabled');
                 syncToFirebase();
-            } else {
-                console.log('Firebase not available');
             }
         }
 
         function disableFirebaseSync() {
-            console.log('Firebase sync disabled - using localStorage only');
+            autoSyncEnabled = false;
+            console.log('Firebase auto-sync disabled - using localStorage only');
+            updateAutoSyncStatus();
         }
 
         // Restore data from Firebase (overwrites localStorage)
@@ -1372,24 +1409,56 @@
 
                 console.log('Restoring data from Firebase...');
                 
+                // Clear all local data first
+                console.log('Clearing local data...');
+                clients = [];
+                prospects = [];
+                projects = [];
+                invoices = [];
+                
+                // Clear localStorage
+                localStorage.removeItem('clients');
+                localStorage.removeItem('prospects');
+                localStorage.removeItem('projects');
+                localStorage.removeItem('invoices');
+                
                 // Load from Firebase
                 const clientsSnapshot = await getDocs(collection(window.db, 'clients'));
-                const firebaseClients = clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const firebaseClients = clientsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    // Use Firebase document ID as the primary ID, but keep original ID if it exists
+                    const originalId = data.id || parseInt(doc.id) || Date.now() + Math.random();
+                    return { ...data, id: originalId, firebaseId: doc.id };
+                });
                 
                 const prospectsSnapshot = await getDocs(collection(window.db, 'prospects'));
-                const firebaseProspects = prospectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const firebaseProspects = prospectsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const originalId = data.id || parseInt(doc.id) || Date.now() + Math.random();
+                    return { ...data, id: originalId, firebaseId: doc.id };
+                });
                 
                 const projectsSnapshot = await getDocs(collection(window.db, 'projects'));
-                const firebaseProjects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const firebaseProjects = projectsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const originalId = data.id || parseInt(doc.id) || Date.now() + Math.random();
+                    return { ...data, id: originalId, firebaseId: doc.id };
+                });
                 
                 const invoicesSnapshot = await getDocs(collection(window.db, 'invoices'));
-                const firebaseInvoices = invoicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const firebaseInvoices = invoicesSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const originalId = data.id || parseInt(doc.id) || Date.now() + Math.random();
+                    return { ...data, id: originalId, firebaseId: doc.id };
+                });
                 
-                // Update local arrays
+                // Update local arrays with Firebase data
                 clients = firebaseClients;
                 prospects = firebaseProspects;
                 projects = firebaseProjects;
                 invoices = firebaseInvoices;
+                
+                console.log('Firebase data loaded - Clients:', clients.length, 'Prospects:', prospects.length, 'Projects:', projects.length, 'Invoices:', invoices.length);
                 
                 // Save to localStorage
                 saveData();
@@ -1420,22 +1489,41 @@
                 
                 // Load from Firebase
                 const clientsSnapshot = await getDocs(collection(window.db, 'clients'));
-                const firebaseClients = clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const firebaseClients = clientsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const originalId = data.id || parseInt(doc.id) || Date.now() + Math.random();
+                    return { ...data, id: originalId, firebaseId: doc.id };
+                });
                 
                 const prospectsSnapshot = await getDocs(collection(window.db, 'prospects'));
-                const firebaseProspects = prospectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const firebaseProspects = prospectsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const originalId = data.id || parseInt(doc.id) || Date.now() + Math.random();
+                    return { ...data, id: originalId, firebaseId: doc.id };
+                });
                 
                 const projectsSnapshot = await getDocs(collection(window.db, 'projects'));
-                const firebaseProjects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const firebaseProjects = projectsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const originalId = data.id || parseInt(doc.id) || Date.now() + Math.random();
+                    return { ...data, id: originalId, firebaseId: doc.id };
+                });
                 
                 const invoicesSnapshot = await getDocs(collection(window.db, 'invoices'));
-                const firebaseInvoices = invoicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const firebaseInvoices = invoicesSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const originalId = data.id || parseInt(doc.id) || Date.now() + Math.random();
+                    return { ...data, id: originalId, firebaseId: doc.id };
+                });
                 
                 // Merge with existing data (Firebase takes priority for conflicts)
+                // For sync, we replace the arrays completely to avoid duplicates
                 clients = firebaseClients;
                 prospects = firebaseProspects;
                 projects = firebaseProjects;
                 invoices = firebaseInvoices;
+                
+                console.log('Firebase data synced - Clients:', clients.length, 'Prospects:', prospects.length, 'Projects:', projects.length, 'Invoices:', invoices.length);
                 
                 // Save to localStorage
                 saveData();
@@ -1450,6 +1538,48 @@
                 console.error('Error syncing from Firebase:', error);
                 showNotification('Error syncing from Firebase', 'error');
                 return false;
+            }
+        }
+
+        // Clear all Firebase data with optimized throttling
+        async function clearFirebaseData() {
+            try {
+                if (!window.db) return;
+                
+                console.log('Clearing all Firebase data...');
+                
+                const collections = ['clients', 'prospects', 'projects', 'invoices'];
+                
+                for (const collectionName of collections) {
+                    const snapshot = await getDocs(collection(window.db, collectionName));
+                    console.log(`Clearing ${collectionName}: ${snapshot.docs.length} documents`);
+                    
+                    // Process deletions in larger batches for faster clearing
+                    const batchSize = 15;
+                    for (let i = 0; i < snapshot.docs.length; i += batchSize) {
+                        const batch = snapshot.docs.slice(i, i + batchSize);
+                        
+                        // Process batch with minimal delays
+                        for (const docSnapshot of batch) {
+                            try {
+                                await deleteDoc(docSnapshot.ref);
+                                // Minimal delay between deletions
+                                await new Promise(resolve => setTimeout(resolve, 30));
+                            } catch (error) {
+                                console.log(`Failed to delete document ${docSnapshot.id}:`, error.message);
+                            }
+                        }
+                        
+                        // Shorter delay between batches
+                        if (i + batchSize < snapshot.docs.length) {
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                        }
+                    }
+                }
+                
+                console.log('All Firebase data cleared');
+            } catch (error) {
+                console.error('Error clearing Firebase data:', error);
             }
         }
 
@@ -1478,6 +1608,48 @@
                 statusDiv.style.borderColor = '#f5c6cb';
                 statusText.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> Firebase is not connected';
             }
+        }
+
+        function updateAutoSyncStatus() {
+            const autoSyncDiv = document.getElementById('autoSyncStatus');
+            const autoSyncText = document.getElementById('autoSyncText');
+            
+            if (autoSyncDiv && autoSyncText) {
+                if (autoSyncEnabled) {
+                    autoSyncDiv.style.background = '#d4edda';
+                    autoSyncDiv.style.borderColor = '#c3e6cb';
+                    autoSyncText.innerHTML = '<i class="fas fa-check-circle" style="color: #28a745;"></i> Auto-sync is enabled';
+                } else {
+                    autoSyncDiv.style.background = '#f8d7da';
+                    autoSyncDiv.style.borderColor = '#f5c6cb';
+                    autoSyncText.innerHTML = '<i class="fas fa-pause-circle" style="color: #dc3545;"></i> Auto-sync is disabled';
+                }
+            } else {
+                console.log('Auto-sync elements not found:', { autoSyncDiv, autoSyncText });
+            }
+        }
+
+        function testSettingsPage() {
+            console.log('=== SETTINGS PAGE TEST ===');
+            console.log('Auto-sync enabled:', autoSyncEnabled);
+            console.log('Firebase available:', !!window.db);
+            
+            const autoSyncDiv = document.getElementById('autoSyncStatus');
+            const autoSyncText = document.getElementById('autoSyncText');
+            const firebaseStatus = document.getElementById('firebaseStatus');
+            const statusText = document.getElementById('statusText');
+            
+            console.log('Elements found:');
+            console.log('- autoSyncDiv:', autoSyncDiv);
+            console.log('- autoSyncText:', autoSyncText);
+            console.log('- firebaseStatus:', firebaseStatus);
+            console.log('- statusText:', statusText);
+            
+            if (autoSyncDiv) {
+                console.log('Auto-sync div content:', autoSyncDiv.innerHTML);
+            }
+            
+            showNotification('Settings page test completed - check console', 'info');
         }
 
         async function syncToFirebaseUI() {
@@ -1538,6 +1710,38 @@
             }
         }
 
+        // Debug function to check Firebase data
+        async function debugFirebaseData() {
+            try {
+                if (!window.db) {
+                    console.log('Firebase not available');
+                    return;
+                }
+                
+                console.log('=== FIREBASE DEBUG DATA ===');
+                
+                const collections = ['clients', 'prospects', 'projects', 'invoices'];
+                
+                for (const collectionName of collections) {
+                    const snapshot = await getDocs(collection(window.db, collectionName));
+                    console.log(`${collectionName.toUpperCase()}: ${snapshot.docs.length} documents`);
+                    
+                    snapshot.docs.forEach((doc, index) => {
+                        console.log(`  ${index + 1}. ID: ${doc.id}, Data:`, doc.data());
+                    });
+                }
+                
+                console.log('=== LOCAL DATA ===');
+                console.log('Clients:', clients.length, clients);
+                console.log('Prospects:', prospects.length, prospects);
+                console.log('Projects:', projects.length, projects);
+                console.log('Invoices:', invoices.length, invoices);
+                console.log('========================');
+            } catch (error) {
+                console.error('Error debugging Firebase data:', error);
+            }
+        }
+
         // Make functions available globally
         window.testNavigation = testNavigation;
         window.testClick = testClick;
@@ -1551,6 +1755,9 @@
         window.syncToFirebaseUI = syncToFirebaseUI;
         window.restoreFromFirebaseUI = restoreFromFirebaseUI;
         window.syncFromFirebaseUI = syncFromFirebaseUI;
+        window.clearFirebaseData = clearFirebaseData;
+        window.debugFirebaseData = debugFirebaseData;
+        window.testSettingsPage = testSettingsPage;
 
         // Toggle contract options visibility
         function toggleContractOptions() {
@@ -4921,6 +5128,9 @@
         // Settings page
         function showSettings() {
             const mainContent = document.querySelector('.main-content');
+            console.log('Rendering Settings page...');
+            console.log('Main content element:', mainContent);
+            
             mainContent.innerHTML = `
                 <div class="header">
                     <h1 class="page-title">Settings</h1>
@@ -4938,6 +5148,21 @@
                             <span id="statusText">Checking connection...</span>
                         </div>
                         <button class="btn" style="background: var(--info); color: white;" onclick="checkFirebaseStatusUI()">Check Status</button>
+                    </div>
+                    <div class="form-group">
+                        <label><strong>Auto-Sync Settings</strong></label>
+                        <p style="color: var(--gray); font-size: 14px; margin: 5px 0;">Automatically sync data to Firebase when changes are made</p>
+                        <div style="display: flex; gap: 8px; margin-top: 12px; align-items: center;">
+                            <button class="btn" style="background: var(--success); color: white; padding: 8px 16px; font-size: 14px; border-radius: 6px; min-width: 120px;" onclick="enableFirebaseSync(); showNotification('Auto-sync enabled', 'success');">
+                                <i class="fas fa-play" style="margin-right: 6px;"></i>Enable
+                            </button>
+                            <button class="btn" style="background: var(--danger); color: white; padding: 8px 16px; font-size: 14px; border-radius: 6px; min-width: 120px;" onclick="disableFirebaseSync(); showNotification('Auto-sync disabled', 'info');">
+                                <i class="fas fa-pause" style="margin-right: 6px;"></i>Disable
+                            </button>
+                        </div>
+                        <div id="autoSyncStatus" style="margin-top: 12px; padding: 8px 12px; border-radius: 6px; background: #f8f9fa; border: 1px solid #e9ecef; text-align: center; font-size: 14px;">
+                            <span id="autoSyncText" style="font-weight: 500;">Auto-sync is disabled</span>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Sync to Firebase</label>
@@ -4990,10 +5215,27 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- Debug Section -->
+                <div class="card" style="background: #f0f8ff; border: 2px solid #007bff;">
+                    <div class="card-header">
+                        <h2 class="card-title">Debug Test</h2>
+                    </div>
+                    <div class="form-group">
+                        <label>Test Settings Page</label>
+                        <p style="color: var(--gray); font-size: 14px; margin: 5px 0;">Test if the Settings page is working correctly</p>
+                        <button class="btn" style="background: #007bff; color: white;" onclick="testSettingsPage()">
+                            <i class="fas fa-bug"></i> Test Settings
+                        </button>
+                    </div>
+                </div>
             `;
             
             // Check Firebase status when settings page loads
-            setTimeout(checkFirebaseStatusUI, 500);
+            setTimeout(() => {
+                checkFirebaseStatusUI();
+                updateAutoSyncStatus();
+            }, 500);
         }
 
         // Analytics page
@@ -5133,9 +5375,9 @@
                 
                 // Only include confirmed payments in revenue calculations
                 if (client.paymentStatus !== 'pending') {
-                    serviceRevenue[service].totalValue += client.value || 0;
-                    serviceRevenue[service].revenueCollected += client.paidAmount || 0;
-                    serviceRevenue[service].pendingRevenue += (client.value || 0) - (client.paidAmount || 0);
+                serviceRevenue[service].totalValue += client.value || 0;
+                serviceRevenue[service].revenueCollected += client.paidAmount || 0;
+                serviceRevenue[service].pendingRevenue += (client.value || 0) - (client.paidAmount || 0);
                 }
             });
             
