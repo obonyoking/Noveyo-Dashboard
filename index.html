@@ -43,8 +43,8 @@
     </script>
     <style>
         :root {
-            --primary: #6C63FF;
-            --secondary: #4ECDC4;
+            --primary: #060644;
+            --secondary: #41c1ba;
             --dark: #2C3E50;
             --light: #F8F9FA;
             --success: #28A745;
@@ -2847,7 +2847,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="totalInvoiceAmount">KSh 0</h3>
-                            <p>Total Amount</p>
+                            <p>Total Collected</p>
                         </div>
                     </div>
                 </div>
@@ -2863,7 +2863,7 @@
                                 <tr>
                                     <th>Invoice #</th>
                                     <th>Client</th>
-                                    <th>Amount</th>
+                                    <th>Total Collected</th>
                                     <th>Date</th>
                                     <th>Status</th>
                                     <th>Actions</th>
@@ -3208,12 +3208,25 @@
             showInvoices();
         }
 
+        // Calculate total collected based on payment status
+        function calculateTotalCollected(invoice) {
+            switch(invoice.status) {
+                case 'Paid':
+                    return invoice.total;
+                case 'Pending':
+                case 'Overdue':
+                case 'Cancelled':
+                default:
+                    return 0;
+            }
+        }
+
         // Update invoice stats
         function updateInvoiceStats() {
             const totalInvoices = invoices.length;
             const paidInvoices = invoices.filter(inv => inv.status === 'Paid').length;
             const pendingInvoices = invoices.filter(inv => inv.status === 'Pending').length;
-            const totalAmount = invoices.reduce((sum, inv) => sum + inv.total, 0);
+            const totalCollected = invoices.reduce((sum, inv) => sum + calculateTotalCollected(inv), 0);
             
             const totalInvoicesEl = document.getElementById('totalInvoices');
             const paidInvoicesEl = document.getElementById('paidInvoices');
@@ -3223,7 +3236,7 @@
             if (totalInvoicesEl) totalInvoicesEl.textContent = totalInvoices;
             if (paidInvoicesEl) paidInvoicesEl.textContent = paidInvoices;
             if (pendingInvoicesEl) pendingInvoicesEl.textContent = pendingInvoices;
-            if (totalAmountEl) totalAmountEl.textContent = `KSh ${totalAmount.toLocaleString()}`;
+            if (totalAmountEl) totalAmountEl.textContent = `KSh ${totalCollected.toLocaleString()}`;
         }
 
         // Preview invoice
@@ -3835,7 +3848,9 @@
                 `;
             }
 
-            return invoices.map(invoice => `
+            return invoices.map(invoice => {
+                const totalCollected = calculateTotalCollected(invoice);
+                return `
                 <tr>
                     <td>
                         <strong>${invoice.invoiceNumber}</strong>
@@ -3846,7 +3861,7 @@
                             <br><small style="color: #666;">${invoice.clientEmail}</small>
                         </div>
                     </td>
-                    <td>KSh ${invoice.total.toLocaleString()}</td>
+                    <td>KSh ${totalCollected.toLocaleString()}</td>
                     <td>${new Date(invoice.date).toLocaleDateString()}</td>
                     <td>
                         <select class="form-control" style="width: 120px; font-size: 12px; padding: 4px;" onchange="updateInvoiceStatus(${invoice.id}, this.value)">
@@ -3862,7 +3877,8 @@
                         <i class="fas fa-edit" style="color: var(--warning); cursor: pointer;" onclick="editInvoice(${invoice.id})" title="Edit Invoice"></i>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
 
         // View invoice
@@ -4026,7 +4042,8 @@
                 tax: parseFloat(document.getElementById('invoiceTax').textContent.replace('KSh ', '')),
                 discount: parseFloat(document.getElementById('discount').value),
                 total: parseFloat(document.getElementById('invoiceTotal').textContent.replace('KSh ', '')),
-                notes: document.getElementById('notes').value
+                notes: document.getElementById('notes').value,
+                status: invoices[invoiceIndex].status || 'Pending'
             };
             
             localStorage.setItem('invoices', JSON.stringify(invoices));
