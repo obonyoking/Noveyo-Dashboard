@@ -7,6 +7,39 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCW5Fjn6qM9a2XVoLwnZ1aE_J3eWP8heg0",
+            authDomain: "noveyo-client-dashboard.firebaseapp.com",
+            projectId: "noveyo-client-dashboard",
+            storageBucket: "noveyo-client-dashboard.firebasestorage.app",
+            messagingSenderId: "969420186345",
+            appId: "1:969420186345:web:71e82466c77053b82f0678"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Make Firebase functions available globally
+        window.db = db;
+        window.addDoc = addDoc;
+        window.getDocs = getDocs;
+        window.doc = doc;
+        window.updateDoc = updateDoc;
+        window.deleteDoc = deleteDoc;
+        window.onSnapshot = onSnapshot;
+        window.query = query;
+        window.orderBy = orderBy;
+        window.collection = collection;
+    </script>
     <style>
         :root {
             --primary: #6C63FF;
@@ -931,6 +964,8 @@
     </div>
 
     <script>
+        console.log('JavaScript is loading...');
+        
         // Global data storage
         let clients = JSON.parse(localStorage.getItem('clients')) || [
             {
@@ -1104,6 +1139,8 @@
             }
         ];
 
+        let invoices = [];
+
 
         // Save data to localStorage
         function saveData() {
@@ -1111,11 +1148,107 @@
                 localStorage.setItem('clients', JSON.stringify(clients));
                 localStorage.setItem('prospects', JSON.stringify(prospects));
                 localStorage.setItem('projects', JSON.stringify(projects));
-                console.log('Data saved successfully');
+                localStorage.setItem('invoices', JSON.stringify(invoices));
+                console.log('Data saved to localStorage');
+                
+                // Optional: Sync to Firebase if available
+                if (window.db) {
+                    syncToFirebase();
+                }
             } catch (error) {
                 console.error('Error saving data:', error);
             }
         }
+
+        // Optional Firebase sync functions (non-blocking)
+        async function syncToFirebase() {
+            try {
+                if (!window.db) return;
+                
+                console.log('Syncing to Firebase...');
+                
+                // Sync clients
+                await syncCollectionToFirebase('clients', clients);
+                
+                // Sync prospects
+                await syncCollectionToFirebase('prospects', prospects);
+                
+                // Sync projects
+                await syncCollectionToFirebase('projects', projects);
+                
+                // Sync invoices
+                await syncCollectionToFirebase('invoices', invoices);
+                
+                console.log('Firebase sync completed');
+            } catch (error) {
+                console.log('Firebase sync failed (non-critical):', error.message);
+            }
+        }
+
+        // Sync a collection to Firebase
+        async function syncCollectionToFirebase(collectionName, data) {
+            try {
+                if (!window.db || !data || data.length === 0) return;
+                
+                // Get existing Firebase data
+                const snapshot = await getDocs(collection(window.db, collectionName));
+                const existingIds = new Set(snapshot.docs.map(doc => doc.id));
+                
+                // Add/update items
+                for (const item of data) {
+                    if (item.id) {
+                        const docRef = doc(window.db, collectionName, item.id.toString());
+                        await updateDoc(docRef, item).catch(async () => {
+                            // If update fails, try to add
+                            await addDoc(collection(window.db, collectionName), item);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.log(`Firebase sync failed for ${collectionName}:`, error.message);
+            }
+        }
+
+        // Optional: Load from Firebase (fallback)
+        async function loadFromFirebase() {
+            try {
+                if (!window.db) return false;
+                
+                console.log('Loading from Firebase...');
+                
+                // Load clients
+                const clientsSnapshot = await getDocs(collection(window.db, 'clients'));
+                const firebaseClients = clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Load prospects
+                const prospectsSnapshot = await getDocs(collection(window.db, 'prospects'));
+                const firebaseProspects = prospectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Load projects
+                const projectsSnapshot = await getDocs(collection(window.db, 'projects'));
+                const firebaseProjects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Load invoices
+                const invoicesSnapshot = await getDocs(collection(window.db, 'invoices'));
+                const firebaseInvoices = invoicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Only use Firebase data if localStorage is empty
+                if (clients.length === 0 && firebaseClients.length > 0) {
+                    clients = firebaseClients;
+                    prospects = firebaseProspects;
+                    projects = firebaseProjects;
+                    invoices = firebaseInvoices;
+                    console.log('Loaded data from Firebase');
+                    return true;
+                }
+                
+                return false;
+            } catch (error) {
+                console.log('Firebase load failed (non-critical):', error.message);
+                return false;
+            }
+        }
+
 
         // Force reset data to defaults
         function resetDataToDefaults() {
@@ -1147,22 +1280,26 @@
         }
 
         // Ensure data is properly initialized
-        function ensureDataInitialized() {
+        async function ensureDataInitialized() {
             // Check if clients data exists in localStorage, if not, start with empty arrays
             if (!localStorage.getItem('clients')) {
-                console.log('No clients data in localStorage, starting with empty data');
-                // Initialize with empty arrays
-                clients = [];
-                prospects = [];
-                projects = [];
-                // Save empty data to localStorage
-                saveData();
+                console.log('No clients data in localStorage, checking Firebase...');
+                
+                // Try to load from Firebase first
+                const loadedFromFirebase = await loadFromFirebase();
+                
+                if (!loadedFromFirebase) {
+                    console.log('No Firebase data found, starting with sample data');
+                    // Initialize with sample data
+                    saveData();
+                }
             } else {
                 console.log('Loading clients from localStorage');
                 // Reload data from localStorage to ensure we have the latest
                 clients = JSON.parse(localStorage.getItem('clients')) || [];
                 prospects = JSON.parse(localStorage.getItem('prospects')) || [];
                 projects = JSON.parse(localStorage.getItem('projects')) || [];
+                invoices = JSON.parse(localStorage.getItem('invoices')) || [];
             }
             
             // Ensure arrays are properly initialized
@@ -1176,16 +1313,11 @@
             if (!projects || !Array.isArray(projects)) {
                 projects = [];
             }
-            
-            console.log('Data initialized - Clients:', clients.length, 'Prospects:', prospects.length, 'Projects:', projects.length);
-            console.log('Client types:', clients.map(c => ({ name: c.name, type: c.type })));
-            console.log('Contract clients:', clients.filter(c => c.type === 'Contract').map(c => ({ name: c.name, type: c.type })));
-            
-            // If we have no clients or the data seems corrupted, reset to defaults
-            if (clients.length === 0) {
-                console.log('No clients found, resetting to defaults');
-                resetDataToDefaults();
+            if (!invoices || !Array.isArray(invoices)) {
+                invoices = [];
             }
+            
+            console.log('Data initialized - Clients:', clients.length, 'Prospects:', prospects.length, 'Projects:', projects.length, 'Invoices:', invoices.length);
         }
 
         // Debug function to check data
@@ -1197,6 +1329,150 @@
             console.log('All client types:', clients.map(c => ({ name: c.name, type: c.type, id: c.id })));
             console.log('==================');
         }
+
+        // Test navigation function
+        function testNavigation(menuText) {
+            console.log('Testing navigation to:', menuText);
+            handleMenuNavigation(menuText);
+        }
+
+        // Simple test function
+        function testClick() {
+            console.log('Test click function called');
+            const menuItem = document.querySelector('.menu-item');
+            if (menuItem) {
+                console.log('Menu item found:', menuItem);
+                menuItem.click();
+            } else {
+                console.log('No menu item found');
+            }
+        }
+
+        // Manual sync functions
+        function enableFirebaseSync() {
+            if (window.db) {
+                console.log('Firebase sync enabled');
+                syncToFirebase();
+            } else {
+                console.log('Firebase not available');
+            }
+        }
+
+        function disableFirebaseSync() {
+            console.log('Firebase sync disabled - using localStorage only');
+        }
+
+        // Restore data from Firebase (overwrites localStorage)
+        async function restoreFromFirebase() {
+            try {
+                if (!window.db) {
+                    console.log('Firebase not available');
+                    return false;
+                }
+
+                console.log('Restoring data from Firebase...');
+                
+                // Load from Firebase
+                const clientsSnapshot = await getDocs(collection(window.db, 'clients'));
+                const firebaseClients = clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const prospectsSnapshot = await getDocs(collection(window.db, 'prospects'));
+                const firebaseProspects = prospectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const projectsSnapshot = await getDocs(collection(window.db, 'projects'));
+                const firebaseProjects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const invoicesSnapshot = await getDocs(collection(window.db, 'invoices'));
+                const firebaseInvoices = invoicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Update local arrays
+                clients = firebaseClients;
+                prospects = firebaseProspects;
+                projects = firebaseProjects;
+                invoices = firebaseInvoices;
+                
+                // Save to localStorage
+                saveData();
+                
+                // Update UI
+                updateStats();
+                showDashboard();
+                
+                console.log('Data restored from Firebase successfully!');
+                showNotification('Data restored from Firebase!', 'success');
+                return true;
+            } catch (error) {
+                console.error('Error restoring from Firebase:', error);
+                showNotification('Error restoring from Firebase', 'error');
+                return false;
+            }
+        }
+
+        // Sync from Firebase (merges with existing data)
+        async function syncFromFirebase() {
+            try {
+                if (!window.db) {
+                    console.log('Firebase not available');
+                    return false;
+                }
+
+                console.log('Syncing from Firebase...');
+                
+                // Load from Firebase
+                const clientsSnapshot = await getDocs(collection(window.db, 'clients'));
+                const firebaseClients = clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const prospectsSnapshot = await getDocs(collection(window.db, 'prospects'));
+                const firebaseProspects = prospectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const projectsSnapshot = await getDocs(collection(window.db, 'projects'));
+                const firebaseProjects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const invoicesSnapshot = await getDocs(collection(window.db, 'invoices'));
+                const firebaseInvoices = invoicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Merge with existing data (Firebase takes priority for conflicts)
+                clients = firebaseClients;
+                prospects = firebaseProspects;
+                projects = firebaseProjects;
+                invoices = firebaseInvoices;
+                
+                // Save to localStorage
+                saveData();
+                
+                // Update UI
+                updateStats();
+                
+                console.log('Data synced from Firebase successfully!');
+                showNotification('Data synced from Firebase!', 'success');
+                return true;
+            } catch (error) {
+                console.error('Error syncing from Firebase:', error);
+                showNotification('Error syncing from Firebase', 'error');
+                return false;
+            }
+        }
+
+        // Check Firebase connection status
+        function checkFirebaseStatus() {
+            if (window.db) {
+                console.log('✅ Firebase is connected and ready');
+                return true;
+            } else {
+                console.log('❌ Firebase is not connected');
+                return false;
+            }
+        }
+
+        // Make functions available globally
+        window.testNavigation = testNavigation;
+        window.testClick = testClick;
+        window.enableFirebaseSync = enableFirebaseSync;
+        window.disableFirebaseSync = disableFirebaseSync;
+        window.syncToFirebase = syncToFirebase;
+        window.restoreFromFirebase = restoreFromFirebase;
+        window.syncFromFirebase = syncFromFirebase;
+        window.checkFirebaseStatus = checkFirebaseStatus;
 
         // Toggle contract options visibility
         function toggleContractOptions() {
@@ -1407,28 +1683,22 @@
         }
 
         // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            // Ensure data is properly initialized
-            ensureDataInitialized();
-            
-            // Debug: Check if data is loaded
-            console.log('Clients:', clients);
-            console.log('Prospects:', prospects);
-            console.log('Projects:', projects);
-            
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('DOM Content Loaded - Initializing dashboard');
+            await ensureDataInitialized();
             initializeSidebar();
             initializeTabs();
             initializeForms();
             initializeSearch();
             updateStats();
+            console.log('Dashboard initialization complete');
             
-            // Ensure sidebar navigation works globally
-            document.addEventListener('click', function(e) {
-                // Check if click is on sidebar menu item
-                if (e.target.closest('.menu-item')) {
-                    handleSidebarClick(e);
-                }
-            });
+            // Test navigation
+            console.log('Testing navigation...');
+            setTimeout(() => {
+                console.log('Sidebar elements:', document.querySelectorAll('.menu-item').length);
+                console.log('Main content:', document.querySelector('.main-content'));
+            }, 1000);
         });
 
         // Sidebar navigation - using event delegation for better reliability
@@ -1658,6 +1928,7 @@
                             <div class="form-group">
                                 <label for="paymentStatus">Payment Status</label>
                                 <select class="form-control" id="paymentStatus" onchange="updateClientStatus()">
+                                    <option value="pending">Pending</option>
                                     <option value="deposit">Deposit (50%)</option>
                                     <option value="fully-paid">Fully Paid</option>
                                 </select>
@@ -1879,6 +2150,10 @@
                                             <span>Deposit Only:</span>
                                             <span style="color: var(--warning); font-weight: bold;">${stats.paymentStatus.deposit}</span>
                                         </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                            <span>Pending:</span>
+                                            <span style="color: var(--warning); font-weight: bold;">${stats.paymentStatus.pending}</span>
+                                        </div>
                                         <div style="display: flex; justify-content: space-between;">
                                             <span>Pending Revenue:</span>
                                             <span style="color: var(--primary); font-weight: bold;">KSh ${stats.pendingRevenue.toLocaleString()}</span>
@@ -2098,6 +2373,7 @@
                         <div class="form-group">
                             <label for="paymentStatus">Payment Status</label>
                             <select class="form-control" id="paymentStatus" onchange="updateClientStatus()">
+                                <option value="pending">Pending</option>
                                 <option value="deposit">Deposit (50%)</option>
                                 <option value="fully-paid">Fully Paid</option>
                             </select>
@@ -2464,8 +2740,7 @@
             initializeInvoiceForm();
         }
 
-        // Invoice data storage
-        let invoices = JSON.parse(localStorage.getItem('invoices')) || [];
+        // Invoice data storage (already declared above)
 
         // Company details for invoices
         let companyDetails = JSON.parse(localStorage.getItem('companyDetails')) || {
@@ -3719,7 +3994,7 @@
                 contractDuration: engagementType === 'contract' ? document.getElementById('contractDuration').value : null,
                 value: projectValue,
                 paymentStatus: paymentStatus,
-                paidAmount: paymentStatus === 'fully-paid' ? projectValue : Math.floor(projectValue * 0.5),
+                paidAmount: paymentStatus === 'fully-paid' ? projectValue : paymentStatus === 'deposit' ? Math.floor(projectValue * 0.5) : 0,
                 status: clientStatus,
                 monthlyPayments: []
             };
@@ -3829,8 +4104,8 @@
                         ${client.contractDuration ? `<br><small style="color: #666;">${client.contractDuration}</small>` : ''}
                     </td>
                     <td>KSh ${(client.value || 0).toLocaleString()}</td>
-                    <td class="${client.paymentStatus === 'fully-paid' ? 'text-success' : 'text-warning'}">
-                        ${client.paymentStatus === 'fully-paid' ? 'Fully Paid' : 'Deposit (50%)'}
+                    <td class="${client.paymentStatus === 'fully-paid' ? 'text-success' : client.paymentStatus === 'pending' ? 'text-warning' : 'text-warning'}">
+                        ${client.paymentStatus === 'fully-paid' ? 'Fully Paid' : client.paymentStatus === 'pending' ? 'Pending' : 'Deposit (50%)'}
                         <br><small>KSh ${(client.paidAmount || 0).toLocaleString()} paid</small>
                         ${client.monthlyPayments && client.monthlyPayments.length > 0 ? `<br><small style="color: #666;">${client.monthlyPayments.length} payments</small>` : ''}
                     </td>
@@ -3972,8 +4247,11 @@
             let newPaidAmount;
             if (newPaymentStatus === 'fully-paid') {
                 newPaidAmount = projectValue;
-            } else {
+            } else if (newPaymentStatus === 'deposit') {
                 newPaidAmount = Math.floor(projectValue * 0.5);
+            } else {
+                // For pending status, no payment is recorded
+                newPaidAmount = 0;
             }
 
             clients[clientIndex] = {
@@ -4193,6 +4471,9 @@
         function calculateClientStats() {
             const contractClients = clients.filter(c => c.type === 'Contract');
             
+            // Only include clients with confirmed payments (not pending) in revenue calculations
+            const confirmedPaymentClients = clients.filter(c => c.paymentStatus !== 'pending');
+            
             const stats = {
                 totalClients: clients.length,
                 activeClients: clients.filter(c => c.status === 'Active').length,
@@ -4200,8 +4481,8 @@
                 closedClients: clients.filter(c => c.status === 'Closed').length,
                 contractClients: contractClients.length,
                 oneTimeClients: clients.filter(c => c.type === 'One-Time').length,
-                totalRevenue: clients.reduce((sum, client) => sum + (client.paidAmount || 0), 0),
-                totalProjectValue: clients.reduce((sum, client) => sum + (client.value || 0), 0),
+                totalRevenue: confirmedPaymentClients.reduce((sum, client) => sum + (client.paidAmount || 0), 0),
+                totalProjectValue: confirmedPaymentClients.reduce((sum, client) => sum + (client.value || 0), 0),
                 pendingRevenue: 0,
                 contractTypes: {
                     weekly: clients.filter(c => c.contractDuration === 'weekly').length,
@@ -4211,11 +4492,12 @@
                 },
                 paymentStatus: {
                     fullyPaid: clients.filter(c => c.paymentStatus === 'fully-paid').length,
-                    deposit: clients.filter(c => c.paymentStatus === 'deposit').length
+                    deposit: clients.filter(c => c.paymentStatus === 'deposit').length,
+                    pending: clients.filter(c => c.paymentStatus === 'pending').length
                 }
             };
 
-            // Calculate pending revenue (total project value - paid amount)
+            // Calculate pending revenue (total project value - paid amount) for confirmed payments only
             stats.pendingRevenue = stats.totalProjectValue - stats.totalRevenue;
 
             return stats;
@@ -4223,7 +4505,9 @@
 
         // Stats update
         function updateStats() {
-            const totalRevenue = clients.reduce((sum, client) => sum + (client.paidAmount || 0), 0);
+            // Only include clients with confirmed payments (not pending) in revenue calculations
+            const confirmedPaymentClients = clients.filter(c => c.paymentStatus !== 'pending');
+            const totalRevenue = confirmedPaymentClients.reduce((sum, client) => sum + (client.paidAmount || 0), 0);
             const activeClients = clients.filter(c => c.status === 'Active').length;
             const ongoingProjects = clients.filter(c => c.status === 'Active' || c.status === 'Paused').length;
             const pendingProposals = prospects.filter(p => p.status === 'Awaiting Response').length;
@@ -4720,9 +5004,13 @@
                 }
                 
                 serviceRevenue[service].totalProjects++;
-                serviceRevenue[service].totalValue += client.value || 0;
-                serviceRevenue[service].revenueCollected += client.paidAmount || 0;
-                serviceRevenue[service].pendingRevenue += (client.value || 0) - (client.paidAmount || 0);
+                
+                // Only include confirmed payments in revenue calculations
+                if (client.paymentStatus !== 'pending') {
+                    serviceRevenue[service].totalValue += client.value || 0;
+                    serviceRevenue[service].revenueCollected += client.paidAmount || 0;
+                    serviceRevenue[service].pendingRevenue += (client.value || 0) - (client.paidAmount || 0);
+                }
             });
             
             return serviceRevenue;
@@ -5047,17 +5335,20 @@
             const storedClients = localStorage.getItem('clients');
             const storedProspects = localStorage.getItem('prospects');
             const storedProjects = localStorage.getItem('projects');
+            const storedInvoices = localStorage.getItem('invoices');
             
             clients = storedClients ? JSON.parse(storedClients) : [];
             prospects = storedProspects ? JSON.parse(storedProspects) : [];
             projects = storedProjects ? JSON.parse(storedProjects) : [];
+            invoices = storedInvoices ? JSON.parse(storedInvoices) : [];
             
             // Ensure arrays are valid
             if (!Array.isArray(clients)) clients = [];
             if (!Array.isArray(prospects)) prospects = [];
             if (!Array.isArray(projects)) projects = [];
+            if (!Array.isArray(invoices)) invoices = [];
             
-            console.log('Data refreshed - Clients:', clients.length, 'Prospects:', prospects.length, 'Projects:', projects.length);
+            console.log('Data refreshed - Clients:', clients.length, 'Prospects:', prospects.length, 'Projects:', projects.length, 'Invoices:', invoices.length);
         }
 
         // Refresh data on window resize to ensure consistency between desktop and mobile
@@ -5096,9 +5387,9 @@
         }
 
         // Initialize the dashboard when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('DOM Content Loaded - Initializing dashboard');
-            ensureDataInitialized();
+            await ensureDataInitialized();
             initializeSidebar();
             initializeTabs();
             initializeForms();
