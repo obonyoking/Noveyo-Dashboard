@@ -2808,7 +2808,6 @@
                 <div class="header">
                     <h1 class="page-title">Invoice Generation</h1>
                     <div class="d-flex align-center gap-10">
-                        <button class="btn" style="background: var(--info); color: white;" onclick="editCompanyDetails()"><i class="fas fa-cog"></i> Company Details</button>
                         <button class="btn btn-primary" onclick="showCreateInvoiceForm()"><i class="fas fa-plus"></i> Create New Invoice</button>
                     </div>
                 </div>
@@ -3319,55 +3318,57 @@
                         ">&times;</button>
                     </div>
                     
-                    <div style="padding: 30px; border: 1px solid #ddd; background: white; font-family: Arial, sans-serif;">
+                    <div style="padding: 20px; border: 1px solid #ddd; background: white; font-family: Arial, sans-serif;">
                         <!-- Invoice Header -->
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #ddd;">
-                            <div style="display: flex; align-items: center;">
-                                <div style="margin-right: 20px;">
-                                    <h1 style="color: #191970; margin: 0; font-size: 24px; font-weight: bold;">${companyDetails.name}</h1>
+                        <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #ddd;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                <div>
+                                    <h1 style="color: #191970; margin: 0; font-size: 20px; font-weight: bold;">${companyDetails.name}</h1>
                                     ${companyDetails.tagline ? `<p style="color: #666; margin: 5px 0; font-size: 12px;">${companyDetails.tagline}</p>` : ''}
                                 </div>
-                            </div>
-                            <div style="text-align: right;">
-                                <h2 style="color: #87CEEB; margin: 0; font-size: 36px; font-weight: bold;">INVOICE</h2>
+                                <div style="text-align: right;">
+                                    <h2 style="color: #87CEEB; margin: 0; font-size: 28px; font-weight: bold;">INVOICE</h2>
+                                </div>
                             </div>
                         </div>
                         
                         <!-- Client Details and Invoice Info -->
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
-                            <div>
-                                <p style="color: #333; margin: 5px 0; font-size: 14px;">Invoice to :</p>
-                                <p style="margin: 5px 0; font-weight: bold; font-size: 16px;">${invoiceData.client.name}</p>
-                                ${invoiceData.client.phone ? `<p style="margin: 2px 0; font-size: 12px;">Phone: ${invoiceData.client.phone}</p>` : ''}
-                                <p style="margin: 2px 0; font-size: 12px;">Email: ${invoiceData.client.email}</p>
-                                ${invoiceData.client.address ? `<p style="margin: 2px 0; font-size: 12px;">Address: ${invoiceData.client.address}</p>` : ''}
-                            </div>
-                            <div style="text-align: right;">
-                                <p style="margin: 5px 0; font-size: 14px;">Invoice no : ${invoiceData.invoiceNumber}</p>
-                                <p style="margin: 5px 0; font-size: 14px;">Date : ${new Date(invoiceData.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                        <div style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px;">
+                            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                                <div style="flex: 1; min-width: 200px;">
+                                    <p style="color: #333; margin: 5px 0; font-size: 14px;">Invoice to :</p>
+                                    <p style="margin: 5px 0; font-weight: bold; font-size: 16px;">${invoiceData.client.name}</p>
+                                    ${invoiceData.client.phone ? `<p style="margin: 2px 0; font-size: 12px;">Phone: ${invoiceData.client.phone}</p>` : ''}
+                                    <p style="margin: 2px 0; font-size: 12px;">Email: ${invoiceData.client.email}</p>
+                                    ${invoiceData.client.address ? `<p style="margin: 2px 0; font-size: 12px;">Address: ${invoiceData.client.address}</p>` : ''}
+                                </div>
+                                <div style="text-align: right; flex: 1; min-width: 200px;">
+                                    <p style="margin: 5px 0; font-size: 14px;">Invoice no : ${invoiceData.invoiceNumber}</p>
+                                    <p style="margin: 5px 0; font-size: 14px;">Date : ${new Date(invoiceData.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                </div>
                             </div>
                         </div>
                         
                         <!-- Items Table -->
-                        <div style="margin-bottom: 30px;">
-                            <table style="width: 100%; border-collapse: collapse; background: white;">
+                        <div style="margin-bottom: 30px; overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; background: white; min-width: 500px;">
                                 <thead>
                                     <tr style="background: #191970;">
-                                        <th style="padding: 12px 8px; text-align: left; color: white; font-weight: bold; font-size: 12px;">NO</th>
-                                        <th style="padding: 12px 8px; text-align: left; color: white; font-weight: bold; font-size: 12px;">DESCRIPTION</th>
-                                        <th style="padding: 12px 8px; text-align: center; color: white; font-weight: bold; font-size: 12px; width: 60px;">QTY</th>
-                                        <th style="padding: 12px 8px; text-align: right; color: white; font-weight: bold; font-size: 12px; width: 80px;">PRICE</th>
-                                        <th style="padding: 12px 8px; text-align: right; color: white; font-weight: bold; font-size: 12px; width: 100px;">TOTAL</th>
+                                        <th style="padding: 10px 6px; text-align: left; color: white; font-weight: bold; font-size: 11px; width: 40px;">NO</th>
+                                        <th style="padding: 10px 6px; text-align: left; color: white; font-weight: bold; font-size: 11px;">DESCRIPTION</th>
+                                        <th style="padding: 10px 6px; text-align: center; color: white; font-weight: bold; font-size: 11px; width: 50px;">QTY</th>
+                                        <th style="padding: 10px 6px; text-align: right; color: white; font-weight: bold; font-size: 11px; width: 70px;">PRICE</th>
+                                        <th style="padding: 10px 6px; text-align: right; color: white; font-weight: bold; font-size: 11px; width: 80px;">TOTAL</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${invoiceData.items.map((item, index) => `
                                         <tr style="background: ${index % 2 === 0 ? '#f0f8ff' : 'white'};">
-                                            <td style="padding: 10px 8px; font-size: 12px;">${index + 1}</td>
-                                            <td style="padding: 10px 8px; font-size: 12px;">${item.description}</td>
-                                            <td style="padding: 10px 8px; text-align: center; font-size: 12px;">${item.quantity}</td>
-                                            <td style="padding: 10px 8px; text-align: right; font-size: 12px;">KSh ${item.rate.toFixed(2)}</td>
-                                            <td style="padding: 10px 8px; text-align: right; font-size: 12px; font-weight: bold;">KSh ${item.amount.toFixed(2)}</td>
+                                            <td style="padding: 8px 6px; font-size: 11px;">${index + 1}</td>
+                                            <td style="padding: 8px 6px; font-size: 11px; word-wrap: break-word;">${item.description}</td>
+                                            <td style="padding: 8px 6px; text-align: center; font-size: 11px;">${item.quantity}</td>
+                                            <td style="padding: 8px 6px; text-align: right; font-size: 11px;">KSh ${item.rate.toFixed(2)}</td>
+                                            <td style="padding: 8px 6px; text-align: right; font-size: 11px; font-weight: bold;">KSh ${item.amount.toFixed(2)}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -3376,7 +3377,7 @@
                         
                         <!-- Totals -->
                         <div style="display: flex; justify-content: flex-end; margin-bottom: 30px;">
-                            <div style="width: 300px;">
+                            <div style="width: 100%; max-width: 300px;">
                                 <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px;">
                                     <span>Sub Total :</span>
                                     <span>KSh ${invoiceData.subtotal.toFixed(2)}</span>
@@ -3405,7 +3406,7 @@
                         
                         <!-- Payment Method -->
                         <div style="margin-bottom: 20px;">
-                            <div style="background: #191970; color: white; padding: 15px; width: 200px; border-radius: 3px;">
+                            <div style="background: #191970; color: white; padding: 15px; width: 100%; max-width: 250px; border-radius: 3px;">
                                 <p style="margin: 0 0 5px 0; font-weight: bold; font-size: 12px;">PAYMENT METHOD :</p>
                                 <p style="margin: 0; font-size: 12px;">Send Money Via Mpesa</p>
                             </div>
@@ -3424,13 +3425,13 @@
                         
                         <!-- Footer with contact info -->
                         <div style="border-top: 2px solid #87CEEB; padding-top: 15px; margin-top: 20px;">
-                            <div style="display: flex; justify-content: space-between; align-items: end;">
-                                <div>
+                            <div style="display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 15px;">
+                                <div style="flex: 1; min-width: 200px;">
                                     <p style="margin: 2px 0; font-size: 11px;">📞 ${companyDetails.phone || '0793 520615'}</p>
                                     <p style="margin: 2px 0; font-size: 11px;">✉️ ${companyDetails.email || 'noveyotechnologies@gmail.com'}</p>
                                     <p style="margin: 2px 0; font-size: 11px;">📱 @noveyotech</p>
                                 </div>
-                                <div style="text-align: right;">
+                                <div style="text-align: right; flex: 1; min-width: 150px;">
                                     <p style="margin: 2px 0; font-size: 12px; font-weight: bold;">${companyDetails.name}</p>
                                     <p style="margin: 2px 0; font-size: 11px;">Accounts Department</p>
                                 </div>
@@ -3858,9 +3859,7 @@
                     <td>
                         <i class="fas fa-eye" style="color: var(--primary); cursor: pointer; margin-right: 10px;" onclick="viewInvoice(${invoice.id})" title="View Invoice"></i>
                         <i class="fas fa-download" style="color: var(--success); cursor: pointer; margin-right: 10px;" onclick="downloadInvoicePDF(${invoice.id})" title="Download PDF"></i>
-                        <i class="fas fa-edit" style="color: var(--warning); cursor: pointer; margin-right: 10px;" onclick="editInvoice(${invoice.id})" title="Edit Invoice"></i>
-                        <i class="fas fa-cog" style="color: var(--info); cursor: pointer; margin-right: 10px;" onclick="editCompanyDetails()" title="Edit Company Details"></i>
-                        <i class="fas fa-trash" style="color: var(--danger); cursor: pointer;" onclick="deleteInvoice(${invoice.id})" title="Delete Invoice"></i>
+                        <i class="fas fa-edit" style="color: var(--warning); cursor: pointer;" onclick="editInvoice(${invoice.id})" title="Edit Invoice"></i>
                     </td>
                 </tr>
             `).join('');
@@ -4394,10 +4393,15 @@
                         <br><small>KSh ${(client.paidAmount || 0).toLocaleString()} paid</small>
                         ${client.monthlyPayments && client.monthlyPayments.length > 0 ? `<br><small style="color: #666;">${client.monthlyPayments.length} payments</small>` : ''}
                     </td>
-                    <td><span class="status-badge status-${(client.status || 'Active').toLowerCase().replace(' ', '-')}">${client.status || 'Active'}</span></td>
+                    <td>
+                        <select class="form-control" style="width: 120px; font-size: 12px; padding: 4px;" onchange="updateClientStatus(${client.id}, this.value)">
+                            <option value="Active" ${client.status === 'Active' ? 'selected' : ''}>Active</option>
+                            <option value="Paused" ${client.status === 'Paused' ? 'selected' : ''}>Paused</option>
+                            <option value="Closed" ${client.status === 'Closed' ? 'selected' : ''}>Closed</option>
+                        </select>
+                    </td>
                     <td>
                         <i class="fas fa-edit" style="color: var(--primary); cursor: pointer;" onclick="editClient(${client.id})"></i>
-                        <i class="fas fa-trash" style="color: var(--danger); cursor: pointer; margin-left: 10px;" onclick="deleteClient(${client.id})"></i>
                     </td>
                 </tr>
             `).join('');
@@ -4563,6 +4567,22 @@
             updateStats();
             
             showNotification('Client updated successfully!', 'success');
+        }
+
+        function updateClientStatus(id, newStatus) {
+            const clientIndex = clients.findIndex(c => c.id === id);
+            if (clientIndex !== -1) {
+                clients[clientIndex].status = newStatus;
+                saveData();
+                updateStats();
+                showNotification(`Client status updated to ${newStatus}`, 'success');
+                
+                // Refresh the clients table to show updated status
+                const tbody = document.querySelector('tbody');
+                if (tbody) {
+                    tbody.innerHTML = renderClientTable();
+                }
+            }
         }
 
         function deleteClient(id) {
@@ -4923,7 +4943,6 @@
                     <td>KSh ${(project.value || 0).toLocaleString()}</td>
                     <td>
                         <i class="fas fa-edit" style="color: var(--primary); cursor: pointer;" onclick="editProject(${project.id})" title="Edit Project"></i>
-                        <i class="fas fa-trash" style="color: var(--danger); cursor: pointer; margin-left: 10px;" onclick="deleteProject(${project.id})" title="Delete Project"></i>
                     </td>
                 </tr>
             `).join('');
