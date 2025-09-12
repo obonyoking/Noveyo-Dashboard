@@ -2833,6 +2833,15 @@
                         </div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(255, 152, 0, 0.1); color: #ff9800;">
+                            <i class="fas fa-hand-holding-usd"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="depositPaidInvoices">0</h3>
+                            <p>Deposit Paid</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
                         <div class="stat-icon" style="background: rgba(255, 193, 7, 0.1); color: var(--warning);">
                             <i class="fas fa-clock"></i>
                         </div>
@@ -3213,6 +3222,8 @@
             switch(invoice.status) {
                 case 'Paid':
                     return invoice.total;
+                case 'Deposit Paid':
+                    return Math.floor(invoice.total * 0.5);
                 case 'Pending':
                 case 'Overdue':
                 case 'Cancelled':
@@ -3225,16 +3236,19 @@
         function updateInvoiceStats() {
             const totalInvoices = invoices.length;
             const paidInvoices = invoices.filter(inv => inv.status === 'Paid').length;
+            const depositPaidInvoices = invoices.filter(inv => inv.status === 'Deposit Paid').length;
             const pendingInvoices = invoices.filter(inv => inv.status === 'Pending').length;
             const totalCollected = invoices.reduce((sum, inv) => sum + calculateTotalCollected(inv), 0);
             
             const totalInvoicesEl = document.getElementById('totalInvoices');
             const paidInvoicesEl = document.getElementById('paidInvoices');
+            const depositPaidInvoicesEl = document.getElementById('depositPaidInvoices');
             const pendingInvoicesEl = document.getElementById('pendingInvoices');
             const totalAmountEl = document.getElementById('totalInvoiceAmount');
             
             if (totalInvoicesEl) totalInvoicesEl.textContent = totalInvoices;
             if (paidInvoicesEl) paidInvoicesEl.textContent = paidInvoices;
+            if (depositPaidInvoicesEl) depositPaidInvoicesEl.textContent = depositPaidInvoices;
             if (pendingInvoicesEl) pendingInvoicesEl.textContent = pendingInvoices;
             if (totalAmountEl) totalAmountEl.textContent = `KSh ${totalCollected.toLocaleString()}`;
         }
@@ -3866,6 +3880,7 @@
                     <td>
                         <select class="form-control" style="width: 120px; font-size: 12px; padding: 4px;" onchange="updateInvoiceStatus(${invoice.id}, this.value)">
                             <option value="Pending" ${invoice.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Deposit Paid" ${invoice.status === 'Deposit Paid' ? 'selected' : ''}>Deposit Paid</option>
                             <option value="Paid" ${invoice.status === 'Paid' ? 'selected' : ''}>Paid</option>
                             <option value="Overdue" ${invoice.status === 'Overdue' ? 'selected' : ''}>Overdue</option>
                             <option value="Cancelled" ${invoice.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
