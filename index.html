@@ -66,6 +66,8 @@
             color: var(--dark);
             display: flex;
             min-height: 100vh;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
         }
         
         /* Sidebar */
@@ -468,6 +470,8 @@
             .table-responsive {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
+                scroll-behavior: smooth;
+                overscroll-behavior: contain;
             }
             
             table {
@@ -481,6 +485,20 @@
             .form-control {
                 padding: 10px;
                 font-size: 14px;
+                -webkit-appearance: none;
+                appearance: none;
+                border-radius: 4px;
+            }
+            
+            /* Prevent zoom on input focus on iOS */
+            input[type="text"], 
+            input[type="email"], 
+            input[type="tel"], 
+            input[type="number"], 
+            input[type="date"], 
+            select, 
+            textarea {
+                font-size: 16px;
             }
             
             .btn {
@@ -1773,6 +1791,22 @@
             }
         }
 
+        // Toggle custom service input
+        function toggleCustomService() {
+            const serviceType = document.getElementById('serviceType');
+            const customServiceGroup = document.getElementById('customServiceGroup');
+            
+            if (serviceType && customServiceGroup) {
+                if (serviceType.value === 'other') {
+                    customServiceGroup.style.display = 'block';
+                    document.getElementById('customServiceType').focus();
+                } else {
+                    customServiceGroup.style.display = 'none';
+                    document.getElementById('customServiceType').value = '';
+                }
+            }
+        }
+
         // Update client status based on payment and engagement type
         function updateClientStatus() {
             const paymentStatus = document.getElementById('paymentStatus');
@@ -2583,14 +2617,19 @@
                         </div>
                         <div class="form-group">
                             <label for="serviceType">Service Type</label>
-                            <select class="form-control" id="serviceType">
+                            <select class="form-control" id="serviceType" onchange="toggleCustomService()">
                                 <option value="">Select service type</option>
                                 <option value="logo">Logo Design</option>
                                 <option value="branding">Branding Package</option>
                                 <option value="web">Web Design</option>
                                 <option value="social">Social Media Graphics</option>
                                 <option value="print">Print Design</option>
+                                <option value="other">Other (Custom)</option>
                             </select>
+                        </div>
+                        <div class="form-group" id="customServiceGroup" style="display: none;">
+                            <label for="customServiceType">Custom Service Type</label>
+                            <input type="text" class="form-control" id="customServiceType" placeholder="Enter custom service type">
                         </div>
                         <div class="form-group">
                             <label>Engagement Type</label>
@@ -2808,6 +2847,9 @@
                 <div class="header">
                     <h1 class="page-title">Invoice Generation</h1>
                     <div class="d-flex align-center gap-10">
+                        <div class="form-group" style="margin-bottom: 0; min-width: 250px;">
+                            <input type="text" class="form-control" placeholder="Search invoices..." id="invoiceSearch">
+                        </div>
                         <button class="btn btn-primary" onclick="showCreateInvoiceForm()"><i class="fas fa-plus"></i> Create New Invoice</button>
                     </div>
                 </div>
@@ -2888,6 +2930,14 @@
 
             // Update invoice stats
             updateInvoiceStats();
+            
+            // Add search functionality
+            const searchInput = document.getElementById('invoiceSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    filterInvoices(e.target.value.toLowerCase());
+                });
+            }
         }
 
         function showCreateInvoiceForm() {
@@ -3251,6 +3301,15 @@
             if (depositPaidInvoicesEl) depositPaidInvoicesEl.textContent = depositPaidInvoices;
             if (pendingInvoicesEl) pendingInvoicesEl.textContent = pendingInvoices;
             if (totalAmountEl) totalAmountEl.textContent = `KSh ${totalCollected.toLocaleString()}`;
+        }
+
+        // Filter invoices based on search term
+        function filterInvoices(searchTerm) {
+            const rows = document.querySelectorAll('#invoicesTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
         }
 
         // Preview invoice
@@ -4300,12 +4359,17 @@
             const engagementType = document.querySelector('input[name="engagementType"]:checked')?.value || '';
             const clientStatus = document.getElementById('clientStatus').value;
             
+            // Get service type (custom or selected)
+            const serviceType = document.getElementById('serviceType').value;
+            const customServiceType = document.getElementById('customServiceType').value;
+            const finalServiceType = serviceType === 'other' ? customServiceType : serviceType;
+            
             const clientData = {
                 id: Date.now(),
                 name: document.getElementById('clientName').value,
                 email: document.getElementById('clientEmail').value,
                 phone: document.getElementById('clientPhone').value,
-                service: document.getElementById('serviceType').value,
+                service: finalServiceType,
                 type: engagementType,
                 contractDuration: engagementType === 'contract' ? document.getElementById('contractDuration').value : null,
                 value: projectValue,
@@ -4320,6 +4384,12 @@
                 alert('Please fill in all required fields');
                 return;
             }
+            
+            // Validate custom service type if "Other" is selected
+            if (serviceType === 'other' && !customServiceType.trim()) {
+                alert('Please enter a custom service type');
+                return;
+            }
 
             // Add client
             clients.push(clientData);
@@ -4328,8 +4398,21 @@
             // Clear form
             e.target.reset();
             
-            // Update UI - always go back to clients list
-            showClients();
+            // Update UI - only refresh if not on mobile to prevent keyboard issues
+            if (window.innerWidth > 768) {
+                showClients();
+            } else {
+                // On mobile, just update stats and show notification without full page refresh
+                updateStats();
+                // Refresh the clients table if we're on the clients page
+                const currentPage = document.querySelector('.page-title');
+                if (currentPage && currentPage.textContent === 'Clients') {
+                    const tbody = document.querySelector('tbody');
+                    if (tbody) {
+                        tbody.innerHTML = renderClientTable();
+                    }
+                }
+            }
             updateStats();
             
             // Show success message
@@ -4502,7 +4585,26 @@
             if (nameField) nameField.value = client.name || '';
             if (emailField) emailField.value = client.email || '';
             if (phoneField) phoneField.value = client.phone || '';
-            if (serviceField) serviceField.value = client.service || '';
+            
+            // Handle service type - check if it's a custom service
+            const predefinedServices = ['logo', 'branding', 'web', 'social', 'print'];
+            if (serviceField) {
+                if (predefinedServices.includes(client.service)) {
+                    serviceField.value = client.service;
+                } else {
+                    // It's a custom service
+                    serviceField.value = 'other';
+                    // Show custom service input and fill it
+                    setTimeout(() => {
+                        toggleCustomService();
+                        const customServiceField = document.getElementById('customServiceType');
+                        if (customServiceField) {
+                            customServiceField.value = client.service || '';
+                        }
+                    }, 50);
+                }
+            }
+            
             if (valueField) valueField.value = client.value || '';
             if (paymentStatusField) paymentStatusField.value = client.paymentStatus || 'deposit';
             if (clientStatusField) clientStatusField.value = client.status || 'Active';
@@ -4553,6 +4655,7 @@
             const emailField = document.getElementById('clientEmail');
             const phoneField = document.getElementById('clientPhone');
             const serviceField = document.getElementById('serviceType');
+            const customServiceField = document.getElementById('customServiceType');
             const valueField = document.getElementById('projectValue');
             const paymentStatusField = document.getElementById('paymentStatus');
             const clientStatusField = document.getElementById('clientStatus');
@@ -4563,6 +4666,11 @@
             const newPaymentStatus = paymentStatusField ? paymentStatusField.value : 'deposit';
             const newClientStatus = clientStatusField ? clientStatusField.value : 'Active';
             const engagementTypeValue = engagementType ? engagementType.value : '';
+            
+            // Get service type (custom or selected)
+            const serviceType = serviceField ? serviceField.value : '';
+            const customServiceType = customServiceField ? customServiceField.value : '';
+            const finalServiceType = serviceType === 'other' ? customServiceType : serviceType;
 
             // Calculate new paid amount based on payment status
             let newPaidAmount;
@@ -4580,7 +4688,7 @@
                 name: nameField ? nameField.value : '',
                 email: emailField ? emailField.value : '',
                 phone: phoneField ? phoneField.value : '',
-                service: serviceField ? serviceField.value : '',
+                service: finalServiceType,
                 type: engagementTypeValue,
                 contractDuration: engagementTypeValue === 'contract' && contractDurationField ? contractDurationField.value : null,
                 value: projectValue,
@@ -5818,10 +5926,17 @@
         });
 
         // Add window resize listener to refresh data when switching between desktop and mobile
+        let lastWidth = window.innerWidth;
         window.addEventListener('resize', function() {
-            // Debounce the resize event to avoid too many calls
-            clearTimeout(window.resizeTimeout);
-            window.resizeTimeout = setTimeout(refreshDataOnResize, 250);
+            const currentWidth = window.innerWidth;
+            // Only refresh if there's a significant width change (desktop to mobile or vice versa)
+            if (Math.abs(currentWidth - lastWidth) > 100) {
+                clearTimeout(window.resizeTimeout);
+                window.resizeTimeout = setTimeout(() => {
+                    refreshDataOnResize();
+                    lastWidth = currentWidth;
+                }, 500); // Increased delay to prevent bouncing
+            }
         });
 
         // Add periodic data sync to ensure consistency
