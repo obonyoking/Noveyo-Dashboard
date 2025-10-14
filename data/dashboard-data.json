@@ -14,8 +14,9 @@
       "status": "Paused",
       "paidAmount": 250,
       "firebaseId": "1757211400507",
-      "lastModified": "2025-10-14T22:03:05.827Z",
-      "syncStatus": "pending"
+      "lastModified": "2025-10-14T22:05:46.320Z",
+      "syncStatus": "synced",
+      "lastSynced": "2025-10-14T22:05:46.324Z"
     },
     {
       "value": 200,
@@ -30,8 +31,9 @@
       "paidAmount": 100,
       "paymentStatus": "deposit",
       "firebaseId": "1757212335920",
-      "lastModified": "2025-10-14T22:03:05.827Z",
-      "syncStatus": "pending"
+      "lastModified": "2025-10-14T22:05:46.320Z",
+      "syncStatus": "synced",
+      "lastSynced": "2025-10-14T22:05:46.325Z"
     },
     {
       "paidAmount": 1000,
@@ -46,8 +48,9 @@
       "paymentStatus": "fully-paid",
       "id": 1757212504714,
       "firebaseId": "1757212504714",
-      "lastModified": "2025-10-14T22:03:05.827Z",
-      "syncStatus": "pending"
+      "lastModified": "2025-10-14T22:05:46.320Z",
+      "syncStatus": "synced",
+      "lastSynced": "2025-10-14T22:05:46.325Z"
     }
   ],
   "prospects": [
@@ -62,8 +65,9 @@
       "phone": "N/A",
       "id": 1,
       "firebaseId": "1",
-      "lastModified": "2025-10-14T22:03:05.828Z",
-      "syncStatus": "pending"
+      "lastModified": "2025-10-14T22:05:46.321Z",
+      "syncStatus": "synced",
+      "lastSynced": "2025-10-14T22:05:46.326Z"
     }
   ],
   "projects": [
@@ -80,12 +84,13 @@
       "description": "Edit posters that show major weekend premier league football games.",
       "value": 30000,
       "firebaseId": "1757231227089",
-      "lastModified": "2025-10-14T22:03:05.828Z",
-      "syncStatus": "pending"
+      "lastModified": "2025-10-14T22:05:46.321Z",
+      "syncStatus": "synced",
+      "lastSynced": "2025-10-14T22:05:46.328Z"
     }
   ],
   "invoices": [],
   "expenses": [],
-  "exportDate": "2025-10-14T22:05:43.951Z",
+  "exportDate": "2025-10-14T22:06:00.255Z",
   "version": 1
 }
