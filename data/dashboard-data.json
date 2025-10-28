@@ -14,9 +14,9 @@
       "status": "Paused",
       "paidAmount": 250,
       "firebaseId": "1757211400507",
-      "lastModified": "2025-10-28T15:32:48.942Z",
+      "lastModified": "2025-10-28T15:37:41.383Z",
       "syncStatus": "synced",
-      "lastSynced": "2025-10-28T15:32:48.958Z"
+      "lastSynced": "2025-10-28T15:37:41.407Z"
     },
     {
       "value": 200,
@@ -31,9 +31,9 @@
       "paidAmount": 100,
       "paymentStatus": "deposit",
       "firebaseId": "1757212335920",
-      "lastModified": "2025-10-28T15:32:48.946Z",
+      "lastModified": "2025-10-28T15:37:41.390Z",
       "syncStatus": "synced",
-      "lastSynced": "2025-10-28T15:32:48.958Z"
+      "lastSynced": "2025-10-28T15:37:41.407Z"
     },
     {
       "paidAmount": 1000,
@@ -48,9 +48,9 @@
       "paymentStatus": "fully-paid",
       "id": 1757212504714,
       "firebaseId": "1757212504714",
-      "lastModified": "2025-10-28T15:32:48.946Z",
+      "lastModified": "2025-10-28T15:37:41.391Z",
       "syncStatus": "synced",
-      "lastSynced": "2025-10-28T15:32:48.959Z"
+      "lastSynced": "2025-10-28T15:37:41.407Z"
     }
   ],
   "prospects": [
@@ -65,9 +65,9 @@
       "phone": "N/A",
       "id": 1,
       "firebaseId": "1",
-      "lastModified": "2025-10-28T15:32:48.948Z",
+      "lastModified": "2025-10-28T15:37:41.399Z",
       "syncStatus": "synced",
-      "lastSynced": "2025-10-28T15:32:48.963Z"
+      "lastSynced": "2025-10-28T15:37:41.409Z"
     }
   ],
   "projects": [
@@ -84,13 +84,13 @@
       "description": "Edit posters that show major weekend premier league football games.",
       "value": 30000,
       "firebaseId": "1757231227089",
-      "lastModified": "2025-10-28T15:32:48.951Z",
+      "lastModified": "2025-10-28T15:37:41.400Z",
       "syncStatus": "synced",
-      "lastSynced": "2025-10-28T15:32:48.966Z"
+      "lastSynced": "2025-10-28T15:37:41.413Z"
     }
   ],
   "invoices": [],
   "expenses": [],
-  "exportDate": "2025-10-28T15:37:39.268Z",
+  "exportDate": "2025-10-28T15:42:34.730Z",
   "version": 1
 }
